@@ -48,9 +48,10 @@ this library is linked to the `WebView2Win32.dll` library which can be loaded an
 You can build it using the following command line.
 
 ```bash
-gcc webview-c/WebView2Win32.c -shared -static-libgcc -Wl,-s -Iwebview-c -Iwebview-c/ms.webview2.0.8.355/include -Lwebview-c/ms.webview2.0.8.355/x64 -lWebView2Loader -o WebView2Win32.dll
+gcc WebView2Win32.c -shared -static-libgcc -Wl,-s -I. -Ims.webview2.0.8.355/include -Lms.webview2.0.8.355/x64 -lWebView2Loader -o WebView2Win32.dll
 ```
 
 Microsoft Edge (Chromium) shall be installed otherwise MSHTML will be used. This implementation will create a folder for user data.
 
-The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra libraries.
+The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra libraries
+in order to enable, or disable, the Edge implementation.

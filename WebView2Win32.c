@@ -3,6 +3,7 @@
 #include "webview2.h"
 
 #include <stddef.h>
+#include <stdio.h>
 
 #define WEBVIEW2_WIN32_API extern
 
@@ -181,6 +182,12 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
   return 1;
 }
 
+static int WebView2Check() {
+  LPWSTR versionInfo = NULL;
+  HRESULT res = GetWebView2BrowserVersionInfo(NULL, &versionInfo);
+  return (res == S_OK) && (versionInfo != NULL);
+}
+
 static webview2_win32 * webview2_win32_prt = NULL;
 
 static webview2_win32 webview2_win32_ref;
@@ -194,5 +201,8 @@ WEBVIEW2_WIN32_API webview2_win32 * GetWebView2Win32(void) {
     webview2_win32_prt->setBounds = &WebView2SetBounds;
     webview2_win32_prt->registerCallback = &WebView2RegisterCallback;
   }
-  return webview2_win32_prt;
+  if (WebView2Check()) {
+    return webview2_win32_prt;
+  }
+  return NULL;
 }

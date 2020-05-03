@@ -8,21 +8,19 @@
 
 static inline WCHAR *webview_to_utf16(const char *s) {
   DWORD size = MultiByteToWideChar(CP_UTF8, 0, s, -1, 0, 0);
-  WCHAR *ws = (WCHAR *)GlobalAlloc(GMEM_FIXED, sizeof(WCHAR) * size); // TODO Check
-  if (ws == NULL) {
-    return NULL;
+  WCHAR *ws = (WCHAR *)GlobalAlloc(GMEM_FIXED, sizeof(WCHAR) * size);
+  if (ws != NULL) {
+    MultiByteToWideChar(CP_UTF8, 0, s, -1, ws, size);
   }
-  MultiByteToWideChar(CP_UTF8, 0, s, -1, ws, size);
   return ws;
 }
 
 static inline char *webview_from_utf16(WCHAR *ws) {
   int n = WideCharToMultiByte(CP_UTF8, 0, ws, -1, NULL, 0, NULL, NULL);
   char *s = (char *)GlobalAlloc(GMEM_FIXED, n);
-  if (s == NULL) {
-    return NULL;
+  if (s != NULL) {
+    WideCharToMultiByte(CP_UTF8, 0, ws, -1, s, n, NULL, NULL);
   }
-  WideCharToMultiByte(CP_UTF8, 0, ws, -1, s, n, NULL, NULL);
   return s;
 }
 
@@ -155,14 +153,29 @@ WEBVIEW2_WIN32_API void WebView2RegisterCallback(webview2 *pwv2, WebView2Callbac
   }
 }
 
+static char * formatJavaScriptForEval(const char *js) {
+  static const char *prologue = "(function(){";
+  static const char *epilogue = ";})();";
+  int n = strlen(prologue) + strlen(epilogue) + strlen(js) + 1;
+  char *fjs = (char *)malloc(n);
+  if (fjs != NULL) {
+    snprintf(fjs, n, "%s%s%s", prologue, js, epilogue);
+  }
+  return fjs;
+}
+
 WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
   if (pwv2->webview != NULL) {
-    wchar_t *wjs = webview_to_utf16(js);
-    if (wjs != NULL) {
-      IWebView2ExecuteScriptCompletedHandler *handler = NULL;
-      pwv2->webview->lpVtbl->ExecuteScript(pwv2->webview, wjs, handler);
-      GlobalFree(wjs);
-      return 0;
+    char *fjs = formatJavaScriptForEval(js);
+    if (fjs != NULL) {
+      wchar_t *wjs = webview_to_utf16(fjs);
+      free(fjs);
+      if (wjs != NULL) {
+        IWebView2ExecuteScriptCompletedHandler *handler = NULL;
+        pwv2->webview->lpVtbl->ExecuteScript(pwv2->webview, wjs, handler);
+        GlobalFree(wjs);
+        return 0;
+      }
     }
   }
   return 1;

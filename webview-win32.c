@@ -819,15 +819,12 @@ static int webview_fix_ie_compat_mode() {
   return 0;
 }
 
-WEBVIEW_API int webview_init(struct webview *w) {
-  WNDCLASSEX wc;
-  HINSTANCE hInstance;
-  DWORD style;
-  RECT clientRect;
-  RECT rect;
-
-  TCHAR modulePath[MAX_PATH + 1];
+static int webview_load_webview2() {
+  TCHAR modulePath[MAX_PATH + 22];
   char * webView2Win32Path = getenv("WEBVIEW2_WIN32_PATH");
+  if ((webView2Win32Path != NULL) && (strlen(webView2Win32Path) > MAX_PATH)) {
+    webView2Win32Path = NULL;
+  }
   if (webView2Win32Path == NULL) {
     strcpy(modulePath, "WebView2Loader.dll");
   } else {
@@ -853,7 +850,19 @@ WEBVIEW_API int webview_init(struct webview *w) {
   } else {
     webview_print_log("WebView2Win32 not found");
   }
+  return 0;
+}
 
+WEBVIEW_API int webview_init(struct webview *w) {
+  WNDCLASSEX wc;
+  HINSTANCE hInstance;
+  DWORD style;
+  RECT clientRect;
+  RECT rect;
+
+  if (webview_load_webview2() < 0) {
+    return -1;
+  }
   if (webview_fix_ie_compat_mode() < 0) {
     return -1;
   }

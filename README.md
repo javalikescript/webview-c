@@ -39,9 +39,10 @@ gcc webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 gcc webview-example.c -DWEBVIEW_WINAPI=1 -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
 ```
 
-## Edge (Chromium)
+## Edge
 
-The Edge (Chromium) implementation requires the extra library `WebView2Loader.dll` part of the [Microsoft Edge WebView2](https://docs.microsoft.com/en-gb/microsoft-edge/hosting/webview2) SDK,
+The Edge (Chromium) implementation requires the extra library `WebView2Loader.dll`
+part of the [Microsoft Edge WebView2](https://docs.microsoft.com/en-gb/microsoft-edge/hosting/webview2) SDK,
 this library is linked to the `WebView2Win32.dll` library which can be loaded and used by webview.
 
 You can build it using the following command line.
@@ -49,3 +50,7 @@ You can build it using the following command line.
 ```bash
 gcc webview-c/WebView2Win32.c -shared -static-libgcc -Wl,-s -Iwebview-c -Iwebview-c/ms.webview2.0.8.355/include -Lwebview-c/ms.webview2.0.8.355/x64 -lWebView2Loader -o WebView2Win32.dll
 ```
+
+Microsoft Edge (Chromium) shall be installed otherwise MSHTML will be used. This implementation will create a folder for user data.
+
+The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra libraries.

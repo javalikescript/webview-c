@@ -65,7 +65,7 @@ struct webview_priv {
 
 #include <stdio.h>
 
-#include "WebView2Win32.h"
+typedef struct webview2_struct webview2;
 
 struct webview_priv {
   HWND hwnd;

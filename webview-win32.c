@@ -733,7 +733,9 @@ static int DisplayHTMLPage(struct webview *w) {
   return (-5);
 }
 
-static webview2_win32 * WebView2Win32 = NULL;
+#include "webview-win32-edge.c"
+
+static int webview_webview2_enabled = 0;
 
 static void WebView2Callback(webview2 *wv, const char *message, void *context) {
   struct webview *w = (struct webview *)context;
@@ -752,15 +754,15 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
   case WM_CREATE:
     w = (struct webview *)((CREATESTRUCT *)lParam)->lpCreateParams;
     w->priv.hwnd = hwnd;
-    if (WebView2Win32 != NULL) {
-      w->priv.webview2 = WebView2Win32->create(hwnd, w->url);
-      WebView2Win32->registerCallback(w->priv.webview2, &WebView2Callback, w);
+    if (webview_webview2_enabled) {
+      w->priv.webview2 = CreateWebView2(hwnd, w->url);
+      WebView2RegisterCallback(w->priv.webview2, &WebView2Callback, w);
       return TRUE;
     }
     return EmbedBrowserObject(w);
   case WM_DESTROY:
-    if (WebView2Win32 != NULL) {
-      WebView2Win32->release(w->priv.webview2);
+    if (webview_webview2_enabled) {
+      ReleaseWebView2(w->priv.webview2);
       w->priv.webview2 = NULL;
     } else {
       UnEmbedBrowserObject(w);
@@ -769,8 +771,8 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
     return TRUE;
   case WM_SIZE:
     GetClientRect(hwnd, &rect);
-    if (WebView2Win32 != NULL) {
-      WebView2Win32->setBounds(w->priv.webview2, rect);
+    if (webview_webview2_enabled) {
+      WebView2SetBounds(w->priv.webview2, rect);
     } else {
       IWebBrowser2 *webBrowser2;
       IOleObject *browser = *w->priv.browser;
@@ -819,40 +821,6 @@ static int webview_fix_ie_compat_mode() {
   return 0;
 }
 
-static int webview_load_webview2() {
-  TCHAR modulePath[MAX_PATH + 22];
-  char * webView2Win32Path = getenv("WEBVIEW2_WIN32_PATH");
-  if ((webView2Win32Path != NULL) && (strlen(webView2Win32Path) > MAX_PATH)) {
-    webView2Win32Path = NULL;
-  }
-  if (webView2Win32Path == NULL) {
-    strcpy(modulePath, "WebView2Loader.dll");
-  } else {
-    sprintf(modulePath, "%s\\WebView2Loader.dll", webView2Win32Path);
-  }
-  HMODULE hWebView2LoaderModule = LoadLibraryA(modulePath);
-  if (hWebView2LoaderModule != NULL) {
-    if (webView2Win32Path == NULL) {
-      strcpy(modulePath, "WebView2Win32.dll");
-    } else {
-      sprintf(modulePath, "%s\\WebView2Win32.dll", webView2Win32Path);
-    }
-    HMODULE hWebView2Win32Module = LoadLibraryA(modulePath);
-    if (hWebView2Win32Module != NULL) {
-      GetWebView2Win32Fn GetWebView2Win32 = (GetWebView2Win32Fn)GetProcAddress(hWebView2Win32Module, "GetWebView2Win32");
-      WebView2Win32 = GetWebView2Win32();
-    }
-  } else {
-    webview_print_log(modulePath);
-  }
-  if (WebView2Win32 != NULL) {
-    webview_print_log("WebView2Win32 activated");
-  } else {
-    webview_print_log("WebView2Win32 not found");
-  }
-  return 0;
-}
-
 WEBVIEW_API int webview_init(struct webview *w) {
   WNDCLASSEX wc;
   HINSTANCE hInstance;
@@ -860,9 +828,8 @@ WEBVIEW_API int webview_init(struct webview *w) {
   RECT clientRect;
   RECT rect;
 
-  if (webview_load_webview2() < 0) {
-    return -1;
-  }
+  webview_webview2_enabled = WebView2Enable();
+
   if (webview_fix_ie_compat_mode() < 0) {
     return -1;
   }
@@ -911,7 +878,7 @@ WEBVIEW_API int webview_init(struct webview *w) {
 
   SetWindowLongPtr(w->priv.hwnd, GWLP_USERDATA, (LONG_PTR)w);
 
-  if (WebView2Win32 == NULL) {
+  if (!webview_webview2_enabled) {
     DisplayHTMLPage(w);
   }
 
@@ -936,7 +903,7 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
   case WM_COMMAND:
   case WM_KEYDOWN:
   case WM_KEYUP: 
-    if (WebView2Win32 == NULL) {
+    if (!webview_webview2_enabled) {
       HRESULT r = S_OK;
       IWebBrowser2 *webBrowser2;
       IOleObject *browser = *w->priv.browser;
@@ -963,8 +930,8 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
 }
 
 WEBVIEW_API int webview_eval(struct webview *w, const char *js) {
-  if (WebView2Win32 != NULL) {
-    return WebView2Win32->eval(w->priv.webview2, js);
+  if (webview_webview2_enabled) {
+    return WebView2Eval(w->priv.webview2, js);
   }
   IWebBrowser2 *webBrowser2;
   IHTMLDocument2 *htmlDoc2;

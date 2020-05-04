@@ -36,22 +36,15 @@ gcc webview-example.c -DWEBVIEW_GTK=1 `pkg-config --cflags --libs gtk+-3.0 webki
 gcc webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 
 # Windows (mingw)
-gcc webview-example.c -DWEBVIEW_WINAPI=1 -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
+gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2.0.8.355/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
 ```
 
 ## Edge
 
+Microsoft Edge (Chromium) shall be installed with the same architecture, x64 or x86.
+
 The Edge (Chromium) implementation requires the extra library `WebView2Loader.dll`
-part of the [Microsoft Edge WebView2](https://docs.microsoft.com/en-gb/microsoft-edge/hosting/webview2) SDK,
-this library is linked to the `WebView2Win32.dll` library which can be loaded and used by webview.
+part of the [Microsoft Edge WebView2](https://docs.microsoft.com/en-gb/microsoft-edge/hosting/webview2) SDK.
+The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra library.
 
-You can build it using the following command line.
-
-```bash
-gcc WebView2Win32.c -shared -static-libgcc -Wl,-s -I. -Ims.webview2.0.8.355/include -Lms.webview2.0.8.355/x64 -lWebView2Loader -o WebView2Win32.dll
-```
-
-Microsoft Edge (Chromium) shall be installed otherwise MSHTML will be used. This implementation will create a folder for user data.
-
-The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra libraries
-in order to enable, or disable, the Edge implementation.
+Note that this implementation creates a folder for the user data.

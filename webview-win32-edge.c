@@ -1,30 +1,14 @@
-#include "WebView2Win32.h"
-
 #include "webview2.h"
 
 #include <stddef.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 #define WEBVIEW2_WIN32_API extern
 
-static inline WCHAR *webview_to_utf16(const char *s) {
-  DWORD size = MultiByteToWideChar(CP_UTF8, 0, s, -1, 0, 0);
-  WCHAR *ws = (WCHAR *)GlobalAlloc(GMEM_FIXED, sizeof(WCHAR) * size);
-  if (ws != NULL) {
-    MultiByteToWideChar(CP_UTF8, 0, s, -1, ws, size);
-  }
-  return ws;
-}
+typedef void (*WebView2CallbackFn) (webview2 *wv, const char *message, void *context);
 
-static inline char *webview_from_utf16(WCHAR *ws) {
-  int n = WideCharToMultiByte(CP_UTF8, 0, ws, -1, NULL, 0, NULL, NULL);
-  char *s = (char *)GlobalAlloc(GMEM_FIXED, n);
-  if (s != NULL) {
-    WideCharToMultiByte(CP_UTF8, 0, ws, -1, s, n, NULL, NULL);
-  }
-  return s;
-}
-
+typedef HRESULT (*CreateWebView2EnvironmentWithDetailsFnType) (PCWSTR browserExecutableFolder, PCWSTR userDataFolder, PCWSTR additionalBrowserArguments, IWebView2CreateWebView2EnvironmentCompletedHandler* environment_created_handler);
+typedef HRESULT (*GetWebView2BrowserVersionInfoFnType) (PCWSTR browserExecutableFolder, LPWSTR* versionInfo);
 
 typedef struct webview2_struct {
   HWND hwnd;
@@ -43,6 +27,7 @@ typedef struct webview2_struct {
 #define WEBVIEW2_PTR_FROM(_cp, _field) \
 	((webview2 *) ((char *) (_cp) - offsetof(webview2, _field)))
 
+static CreateWebView2EnvironmentWithDetailsFnType CreateWebView2EnvironmentWithDetailsFn = NULL;
 
 static HRESULT WebView2WebMessageReceivedEventHandleInvoke(IWebView2WebMessageReceivedEventHandler * This, IWebView2WebView *webView, IWebView2WebMessageReceivedEventArgs *args) {
   LPWSTR webMessage;
@@ -84,7 +69,6 @@ static HRESULT CreateWebView2_Invoke(IWebView2CreateWebViewCompletedHandler * Th
   return S_OK;
 }
 
-
 static HRESULT CreateWebView2Environment_Invoke(IWebView2CreateWebView2EnvironmentCompletedHandler * This, HRESULT result, IWebView2Environment * webViewEnvironment) {
   webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, env_created_handler);
   webViewEnvironment->lpVtbl->CreateWebView(webViewEnvironment, pwv2->hwnd, &pwv2->webview_created_handler);
@@ -101,7 +85,7 @@ static ULONG NoOpRelease(void * This) {
   return 1;
 }
 
-static void init_webview2(webview2 *pwv2) {
+static void InitWebView2(webview2 *pwv2) {
   pwv2->env_created_handler_vtbl.QueryInterface = (HRESULT (*)(IWebView2CreateWebView2EnvironmentCompletedHandler * This, REFIID riid, void **ppvObject)) &NoOpQueryInterface;
   pwv2->env_created_handler_vtbl.AddRef = (ULONG (*)(IWebView2CreateWebView2EnvironmentCompletedHandler * This)) &NoOpAddRef;
   pwv2->env_created_handler_vtbl.Release = (ULONG (*)(IWebView2CreateWebView2EnvironmentCompletedHandler * This)) &NoOpRelease;
@@ -122,11 +106,11 @@ static void init_webview2(webview2 *pwv2) {
 WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
   webview2 *pwv2 = (webview2 *)GlobalAlloc(GMEM_FIXED, sizeof(webview2));
   if (pwv2 != NULL) {
-    init_webview2(pwv2);
+    InitWebView2(pwv2);
     pwv2->webview = NULL;
     pwv2->hwnd = hwnd;
     pwv2->url = url;
-    HRESULT res = CreateWebView2EnvironmentWithDetails(NULL, NULL, NULL, &pwv2->env_created_handler);
+    HRESULT res = CreateWebView2EnvironmentWithDetailsFn(NULL, NULL, NULL, &pwv2->env_created_handler);
     if (res != S_OK) {
       GlobalFree(pwv2);
       pwv2 = NULL;
@@ -182,27 +166,33 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
   return 1;
 }
 
-static int WebView2Check() {
-  LPWSTR versionInfo = NULL;
-  HRESULT res = GetWebView2BrowserVersionInfo(NULL, &versionInfo);
-  return (res == S_OK) && (versionInfo != NULL);
-}
-
-static webview2_win32 * webview2_win32_prt = NULL;
-
-static webview2_win32 webview2_win32_ref;
-
-WEBVIEW2_WIN32_API webview2_win32 * GetWebView2Win32(void) {
-  if (webview2_win32_prt == NULL) {
-    webview2_win32_prt = &webview2_win32_ref;
-    webview2_win32_prt->create = &CreateWebView2;
-    webview2_win32_prt->release = &ReleaseWebView2;
-    webview2_win32_prt->eval = &WebView2Eval;
-    webview2_win32_prt->setBounds = &WebView2SetBounds;
-    webview2_win32_prt->registerCallback = &WebView2RegisterCallback;
+static int WebView2Enable() {
+  TCHAR modulePath[MAX_PATH + 22];
+  char * webView2Win32Path = getenv("WEBVIEW2_WIN32_PATH");
+  if ((webView2Win32Path != NULL) && (strlen(webView2Win32Path) > MAX_PATH)) {
+    webView2Win32Path = NULL;
   }
-  if (WebView2Check()) {
-    return webview2_win32_prt;
+  if (webView2Win32Path == NULL) {
+    strcpy(modulePath, "WebView2Loader.dll");
+  } else {
+    sprintf(modulePath, "%s\\WebView2Loader.dll", webView2Win32Path);
   }
-  return NULL;
+  HMODULE hWebView2LoaderModule = LoadLibraryA(modulePath);
+  if (hWebView2LoaderModule != NULL) {
+    GetWebView2BrowserVersionInfoFnType GetWebView2BrowserVersionInfoFn = (GetWebView2BrowserVersionInfoFnType)GetProcAddress(hWebView2LoaderModule, "GetWebView2BrowserVersionInfo");
+    CreateWebView2EnvironmentWithDetailsFn = (CreateWebView2EnvironmentWithDetailsFnType)GetProcAddress(hWebView2LoaderModule, "CreateWebView2EnvironmentWithDetails");
+    if ((CreateWebView2EnvironmentWithDetailsFn != NULL) && (GetWebView2BrowserVersionInfoFn != NULL)) {
+      LPWSTR versionInfo = NULL;
+      HRESULT res = GetWebView2BrowserVersionInfoFn(NULL, &versionInfo);
+      if ((res == S_OK) && (versionInfo != NULL)) {
+        webview_print_log("WebView2 enabled");
+        return 1;
+      }
+    }
+  } else {
+    webview_print_log(modulePath);
+  }
+  CreateWebView2EnvironmentWithDetailsFn = NULL;
+  webview_print_log("WebView2Loader not available");
+  return 0;
 }

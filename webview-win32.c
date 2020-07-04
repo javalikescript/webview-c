@@ -733,7 +733,17 @@ static int DisplayHTMLPage(struct webview *w) {
   return (-5);
 }
 
+#include "webview2.h"
+
+#if defined(__ICoreWebView2_INTERFACE_DEFINED__)
 #include "webview-win32-edge.c"
+#elif defined(__WebView2_LIBRARY_DEFINED__)
+#include "webview-win32-edge-0.9.538.c"
+#elif defined(__IWebView2WebView_INTERFACE_DEFINED__)
+#include "webview-win32-edge-0.8.355.c"
+#else
+#error WebView2 header not supported
+#endif
 
 static int webview_webview2_enabled = 0;
 

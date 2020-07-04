@@ -36,7 +36,7 @@ gcc webview-example.c -DWEBVIEW_GTK=1 `pkg-config --cflags --libs gtk+-3.0 webki
 gcc webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 
 # Windows (mingw)
-gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2.0.8.355/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
+gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2.0.9.430/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
 ```
 
 ## Edge
@@ -47,4 +47,11 @@ The Edge (Chromium) implementation requires the extra library `WebView2Loader.dl
 part of the [Microsoft Edge WebView2](https://docs.microsoft.com/en-gb/microsoft-edge/hosting/webview2) SDK.
 The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra library.
 
-Note that this implementation creates a folder for the user data.
+Note that Microsoft Edge WebView2 is still in preview and did not reach general availability.
+There is a minimum Microsoft Edge version required for each WebView2 version, here 82.0.430.0 for 0.9.430.
+
+The WebView2 SDK may fail to auto detect the Edge installation path to use,
+you could indicate the correct installation path by using the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`.
+
+Note that this implementation creates a folder for the user data,
+you could specify a user data folder by using the environment variable `WEBVIEW2_USER_DATA_FOLDER`.

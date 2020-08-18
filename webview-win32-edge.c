@@ -192,8 +192,65 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
   return 1;
 }
 
+#define WEBVIEW2_BROWSER_EXECUTABLE_FOLDER "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER"
+#define WEBVIEW2_DISABLE_AUTO_DETECT "WEBVIEW2_DISABLE_AUTO_DETECT"
+#define WEBVIEW2_WIN32_PATH "WEBVIEW2_WIN32_PATH"
+
+#define KEY_MS_EDGEUPDATE_CLIENTSTATE "SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\ClientState\\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}"
+#define KEY_EBWEBVIEW "EBWebView"
+
+static int directoryExists(LPCSTR lpFileName) {
+    DWORD attributes = GetFileAttributes(lpFileName);
+    return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+static int fileExists(LPCSTR lpFileName) {
+    DWORD attributes = GetFileAttributes(lpFileName);
+    return (attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+static void findWebView2BrowserExecutableFolder() {
+  char data[MAX_PATH];
+  char path[MAX_PATH];
+  char *name;
+  DWORD size;
+  WIN32_FIND_DATA findFileData;
+  HANDLE findFileHandle;
+  if ((getenv(WEBVIEW2_BROWSER_EXECUTABLE_FOLDER) != NULL) || (getenv(WEBVIEW2_DISABLE_AUTO_DETECT) != NULL)) {
+    return;
+  }
+  size = sizeof(data);
+  if (RegGetValueA(HKEY_LOCAL_MACHINE, KEY_MS_EDGEUPDATE_CLIENTSTATE, KEY_EBWEBVIEW, RRF_RT_REG_SZ, NULL, &data, &size) == ERROR_SUCCESS) {
+    if (!directoryExists(data)) {
+      name = strrchr(data, '\\');
+      if (name != NULL) {
+        *name = '\0';
+        name++;
+        path[MAX_PATH];
+        sprintf(path, "%s\\*", data);
+        findFileHandle = FindFirstFile(path, &findFileData) ;
+        if (findFileHandle != INVALID_HANDLE_VALUE) {
+          do {
+            if ((findFileData.cFileName[0] != '.') && (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+              sprintf(path, "%s\\%s\\msedge.exe", data, findFileData.cFileName);
+              if (fileExists(path)) {
+                sprintf(path, "%s\\%s", data, findFileData.cFileName);
+                SetEnvironmentVariable(WEBVIEW2_BROWSER_EXECUTABLE_FOLDER, path);
+                webview_print_log("found potential WebView2 executable folder, use " WEBVIEW2_DISABLE_AUTO_DETECT " to disable");
+                webview_print_log(path);
+                break;
+              }
+            }
+          } while (FindNextFileA(findFileHandle, &findFileData));
+          FindClose(findFileHandle);
+        }
+      }
+    }
+  }
+}
+
 static TCHAR *getWebView2LoaderFileName(TCHAR *modulePath) {
-  char * webView2Win32Path = getenv("WEBVIEW2_WIN32_PATH");
+  char * webView2Win32Path = getenv(WEBVIEW2_WIN32_PATH);
   if ((webView2Win32Path != NULL) && (strlen(webView2Win32Path) > MAX_PATH)) {
     webView2Win32Path = NULL;
   }
@@ -208,6 +265,7 @@ static TCHAR *getWebView2LoaderFileName(TCHAR *modulePath) {
 static int WebView2Enable() {
   TCHAR modulePath[MAX_PATH + 22];
   webview_print_log("Loading WebView2Loader (0.9.430)");
+  findWebView2BrowserExecutableFolder();
   getWebView2LoaderFileName(modulePath);
   webview_print_log(modulePath);
   HMODULE hWebView2LoaderModule = LoadLibraryA(modulePath);
@@ -228,7 +286,7 @@ static int WebView2Enable() {
       webview_print_log("Uncompatible");
     }
   } else {
-    webview_print_log("Unable to load, you could try WEBVIEW2_WIN32_PATH");
+    webview_print_log("Unable to load, you could set " WEBVIEW2_WIN32_PATH);
   }
   CreateCoreWebView2EnvironmentFn = NULL;
   webview_print_log("Not available");

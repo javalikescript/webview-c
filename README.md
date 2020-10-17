@@ -36,22 +36,30 @@ gcc webview-example.c -DWEBVIEW_GTK=1 `pkg-config --cflags --libs gtk+-3.0 webki
 gcc webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 
 # Windows (mingw)
-gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2.0.9.538/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
+gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
 ```
 
 ## Edge
-
-Microsoft Edge (Chromium) shall be installed with the same architecture, x64 or x86.
 
 The Edge (Chromium) implementation requires the extra library `WebView2Loader.dll`
 part of the [Microsoft Edge WebView2](https://docs.microsoft.com/en-gb/microsoft-edge/hosting/webview2) SDK.
 The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder containing the extra library.
 
-Note that Microsoft Edge WebView2 is still in preview and did not reach general availability.
-There is a minimum Microsoft Edge version required for each WebView2 version, here 85.0.538.0 for 0.9.538.
+The [WebView2 Runtime](https://docs.microsoft.com/en-gb/microsoft-edge/webview2/concepts/distribution#understanding-the-webview2-runtime) shall be installed with the same architecture, x64 or x86.
 
-The WebView2 SDK may fail to auto detect the Edge installation path to use,
+Note that Microsoft Edge WebView2 is still in preview and did not reach general availability.
+There is a minimum Microsoft Edge version required for each WebView2 version, here 86.0.622.11 for 0.9.622.
+
+The WebView2 SDK may fail to auto detect the WebView2 Runtime installation path to use,
 you could indicate the correct installation path by using the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`.
+
+[_The Microsoft Edge Stable channel is unavailable for WebView2 usage to prevent apps from taking a dependency on the browser in production._](https://docs.microsoft.com/en-gb/deployedge/microsoft-edge-webview-policies)
+If you still want to use an Microsoft Edge Stable channel for WebView2 you may create a symbolic link named `Edge-Application` using the following command as administrator.
+
+```cmd
+cd "\Program Files (x86)\Microsoft"
+mklink /D Edge-Application Edge\Application
+```
 
 Note that this implementation creates a folder for the user data,
 you could specify a user data folder by using the environment variable `WEBVIEW2_USER_DATA_FOLDER`.

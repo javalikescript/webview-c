@@ -8,55 +8,59 @@
 #define WEBVIEW2_BROWSER_EXECUTABLE_FOLDER "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER"
 #define WEBVIEW2_USER_DATA_FOLDER "WEBVIEW2_USER_DATA_FOLDER"
 
-#define KEY_EBWEBVIEW "EBWebView"
-#define KEY_MS_EDGEUPDATE_CLIENTSTATE "SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\ClientState\\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}"
+#define WEBVIEW2_RT_UUID "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+#define EDGE_STABLE_UUID "{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}"
+
+#define KEY_CLIENTS_LOCATION "location"
+#define KEY_CLIENTS_PV "pv"
+#define KEY_MS_EDGEUPDATE_CLIENTSTATE "SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\ClientState"
+#define KEY_MS_EDGEUPDATE_CLIENTS "SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients"
 
 #define WEBVIEW2_LOADER_DLL "WebView2Loader.dll"
 
-static int directoryExists(LPCSTR lpFileName) {
-    DWORD attributes = GetFileAttributes(lpFileName);
-    return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY);
-}
-
 static int fileExists(LPCSTR lpFileName) {
-    DWORD attributes = GetFileAttributes(lpFileName);
-    return (attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+  return GetFileAttributes(lpFileName) != INVALID_FILE_ATTRIBUTES;
+}
+static int isDirectory(LPCSTR lpFileName) {
+  DWORD attributes = GetFileAttributes(lpFileName);
+  return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+static int isFile(LPCSTR lpFileName) {
+  DWORD attributes = GetFileAttributes(lpFileName);
+  return (attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 static void findWebView2BrowserExecutableFolder() {
   char data[MAX_PATH];
+  char version[64];
   char path[MAX_PATH];
-  char *name;
+  char *bs;
   DWORD size;
-  WIN32_FIND_DATA findFileData;
-  HANDLE findFileHandle;
   if ((getenv(WEBVIEW2_BROWSER_EXECUTABLE_FOLDER) != NULL) || (getenv(WEBVIEW2_WIN32_DISABLE_AUTO_DETECT) != NULL)) {
     return;
   }
+  /*
+  see https://docs.microsoft.com/en-gb/deployedge/microsoft-edge-webview-policies
+  see https://docs.microsoft.com/en-gb/microsoft-edge/webview2/concepts/distribution
+  see https://docs.microsoft.com/en-gb/microsoft-edge/webview2/reference/win32/webview2-idl?view=webview2-0.9.622#createcorewebview2environmentwithoptions
+  To use a fixed version of the WebView2 Runtime, pass the relative path of the folder
+  that contains the fixed version of the WebView2 Runtime to browserExecutableFolder.
+  The path of fixed version of the WebView2 Runtime should not contain \Edge\Application\.
+  When such a path is used, the API will fail with ERROR_NOT_SUPPORTED.
+  */
   size = sizeof(data);
-  if (RegGetValueA(HKEY_LOCAL_MACHINE, KEY_MS_EDGEUPDATE_CLIENTSTATE, KEY_EBWEBVIEW, RRF_RT_REG_SZ, NULL, &data, &size) == ERROR_SUCCESS) {
-    if (!directoryExists(data)) {
-      name = strrchr(data, '\\');
-      if (name != NULL) {
-        *name = '\0';
-        name++;
-        path[MAX_PATH];
-        sprintf(path, "%s\\*", data);
-        findFileHandle = FindFirstFile(path, &findFileData) ;
-        if (findFileHandle != INVALID_HANDLE_VALUE) {
-          do {
-            if ((findFileData.cFileName[0] != '.') && (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-              sprintf(path, "%s\\%s\\msedge.exe", data, findFileData.cFileName);
-              if (fileExists(path)) {
-                sprintf(path, "%s\\%s", data, findFileData.cFileName);
-                SetEnvironmentVariable(WEBVIEW2_BROWSER_EXECUTABLE_FOLDER, path);
-                webview_print_log("found potential WebView2 executable folder, use " WEBVIEW2_WIN32_DISABLE_AUTO_DETECT " to disable");
-                webview_print_log(path);
-                break;
-              }
-            }
-          } while (FindNextFileA(findFileHandle, &findFileData));
-          FindClose(findFileHandle);
+  if (RegGetValueA(HKEY_LOCAL_MACHINE, KEY_MS_EDGEUPDATE_CLIENTS "\\" EDGE_STABLE_UUID, KEY_CLIENTS_LOCATION, RRF_RT_REG_SZ, NULL, &data, &size) == ERROR_SUCCESS) {
+    size = sizeof(version);
+    if (isDirectory(data) && (RegGetValueA(HKEY_LOCAL_MACHINE, KEY_MS_EDGEUPDATE_CLIENTS "\\" EDGE_STABLE_UUID, KEY_CLIENTS_PV, RRF_RT_REG_SZ, NULL, &version, &size) == ERROR_SUCCESS)) {
+      bs = strrchr(data, '\\');
+      if (bs != NULL) {
+        *bs = '-';
+        sprintf(path, "%s\\%s\\msedge.dll", data, version);
+        if (fileExists(path)) {
+          sprintf(path, "%s\\%s", data, version);
+          webview_print_log("found Edge alternative folder, use " WEBVIEW2_WIN32_DISABLE_AUTO_DETECT " to disable");
+          webview_print_log(path);
+          SetEnvironmentVariable(WEBVIEW2_BROWSER_EXECUTABLE_FOLDER, path);
         }
       }
     }
@@ -83,10 +87,14 @@ static WCHAR *getUserData(WCHAR *buffer, size_t sizeOfBuffer) {
   if ((getenv(WEBVIEW2_USER_DATA_FOLDER) == NULL) && (appData != NULL) && (noAppData == NULL)) {
     GetModuleFileNameW(NULL, filename, MAX_PATH);
     WCHAR *executableName = wcsrchr(filename, L'\\');
-    if (executableName == NULL) {
+    if (executableName != NULL) {
+      executableName++;
+    } else {
       executableName = filename;
     }
     swprintf(buffer, sizeOfBuffer, L"%s\\%s.WebView2", appData, executableName);
+    webview_print_log("getUserData()");
+    OutputDebugStringW(buffer);
     return buffer;
   }
   return NULL;
@@ -96,6 +104,9 @@ static WCHAR *getUserData(WCHAR *buffer, size_t sizeOfBuffer) {
 #define WEBVIEW2_WIN32_API extern
 
 typedef void (*WebView2CallbackFn) (webview2 *wv, const char *message, void *context);
+
+#define GET_AVAILABLE_COREWEBVIEW2_BROWSER_VERSION_FN_NAME "GetAvailableCoreWebView2BrowserVersionString"
+#define CREATE_COREWEBVIEW2_ENVIRONMENTWITHOPTIONS_FN_NAME "CreateCoreWebView2EnvironmentWithOptions"
 
 typedef HRESULT (*GetWebView2BrowserVersionInfoFnType) (PCWSTR browserExecutableFolder, LPWSTR* versionInfo);
 typedef HRESULT (*CreateCoreWebView2EnvironmentWithOptionsFnType) (PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions* environmentOptions, ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler* environment_created_handler);
@@ -139,9 +150,17 @@ static HRESULT WebView2WebMessageReceivedEventHandleInvoke(ICoreWebView2WebMessa
 }
 
 static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler * This, HRESULT result, ICoreWebView2Controller *webViewController) {
-  webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, controller_created_handler);
+  webview_print_log("CreateWebView2Controller_Invoke()");
   ICoreWebView2 *webview;
+  if (FAILED(result) || (webViewController == NULL)) {
+    char buffer[256];
+    sprintf(buffer, "CreateWebView2Controller_Invoke(%p, %08X, %p) => %08X (fail)", This, result, webViewController, E_FAIL);
+    webview_print_log(buffer);
+    return E_FAIL;
+  }
   webViewController->lpVtbl->AddRef(webViewController);
+
+  webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, controller_created_handler);
   pwv2->controller = webViewController;
 
   webViewController->lpVtbl->get_CoreWebView2(webViewController, &webview);
@@ -159,6 +178,7 @@ static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2Co
   if ((pwv2->url != NULL) && (strlen(pwv2->url) > 0)) {
     wchar_t *wurl = webview_to_utf16(pwv2->url);
     if (wurl != NULL) {
+      webview_print_log("CreateWebView2Controller_Invoke() Navigate");
       webview->lpVtbl->Navigate(webview, wurl);
       GlobalFree(wurl);
     }
@@ -167,8 +187,18 @@ static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2Co
 }
 
 static HRESULT CreateWebView2Environment_Invoke(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler * This, HRESULT result, ICoreWebView2Environment * webViewEnvironment) {
+  webview_print_log("CreateWebView2Environment_Invoke()");
+  if (FAILED(result) || (webViewEnvironment == NULL)) {
+    char buffer[256];
+    sprintf(buffer, "CreateWebView2Environment_Invoke(%p, %08X, %p) => %08X (fail)", This, result, webViewEnvironment, E_FAIL);
+    webview_print_log(buffer);
+    return E_FAIL;
+  }
+  webViewEnvironment->lpVtbl->AddRef(webViewEnvironment);
   webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, env_created_handler);
-  webViewEnvironment->lpVtbl->CreateCoreWebView2Controller(webViewEnvironment, pwv2->hwnd, &pwv2->controller_created_handler);
+  webview_print_log("CreateWebView2Environment_Invoke() CreateCoreWebView2Controller");
+  HRESULT hResult = webViewEnvironment->lpVtbl->CreateCoreWebView2Controller(webViewEnvironment, pwv2->hwnd, &pwv2->controller_created_handler);
+  webview_print_log("CreateWebView2Environment_Invoke() => ok");
   return S_OK;
 }
 
@@ -211,12 +241,17 @@ WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
       pwv2->hwnd = hwnd;
       pwv2->url = url;
       PCWSTR userDataFolder = getUserData(dirname, MAX_PATH);
-      HRESULT res = CreateCoreWebView2EnvironmentFn(NULL, userDataFolder, NULL, &pwv2->env_created_handler);
-      if (res != S_OK) {
+      HRESULT hr = CreateCoreWebView2EnvironmentFn(NULL, userDataFolder, NULL, &pwv2->env_created_handler);
+      if (FAILED(hr)) {
+        char buffer[256];
+        sprintf(buffer, CREATE_COREWEBVIEW2_ENVIRONMENTWITHOPTIONS_FN_NAME "(%p, %p, %p) => %08X (fail)", NULL, userDataFolder, NULL, hr);
+        webview_print_log(buffer);
         GlobalFree(pwv2);
         pwv2 = NULL;
       }
     }
+  } else {
+    webview_print_log("CreateWebView2 error WebView2 is not enabled");
   }
   return pwv2;
 }
@@ -270,18 +305,18 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
 
 static int WebView2Enable() {
   TCHAR modulePath[MAX_PATH + 22];
-  webview_print_log("Loading WebView2Loader (0.9.538)");
+  webview_print_log("Loading WebView2Loader (0.9.622)");
   findWebView2BrowserExecutableFolder();
   getWebView2LoaderFileName(modulePath);
   webview_print_log(modulePath);
   HMODULE hWebView2LoaderModule = LoadLibraryA(modulePath);
   if (hWebView2LoaderModule != NULL) {
-    GetWebView2BrowserVersionInfoFnType GetWebView2BrowserVersionInfoFn = (GetWebView2BrowserVersionInfoFnType)GetProcAddress(hWebView2LoaderModule, "GetAvailableCoreWebView2BrowserVersionString");
-    CreateCoreWebView2EnvironmentFn = (CreateCoreWebView2EnvironmentWithOptionsFnType)GetProcAddress(hWebView2LoaderModule, "CreateCoreWebView2EnvironmentWithOptions");
+    GetWebView2BrowserVersionInfoFnType GetWebView2BrowserVersionInfoFn = (GetWebView2BrowserVersionInfoFnType)GetProcAddress(hWebView2LoaderModule, GET_AVAILABLE_COREWEBVIEW2_BROWSER_VERSION_FN_NAME);
+    CreateCoreWebView2EnvironmentFn = (CreateCoreWebView2EnvironmentWithOptionsFnType)GetProcAddress(hWebView2LoaderModule, CREATE_COREWEBVIEW2_ENVIRONMENTWITHOPTIONS_FN_NAME);
     if ((CreateCoreWebView2EnvironmentFn != NULL) && (GetWebView2BrowserVersionInfoFn != NULL)) {
       LPWSTR versionInfo = NULL;
-      HRESULT res = GetWebView2BrowserVersionInfoFn(NULL, &versionInfo);
-      if ((res == S_OK) && (versionInfo != NULL)) {
+      HRESULT hr = GetWebView2BrowserVersionInfoFn(NULL, &versionInfo);
+      if ((hr == S_OK) && (versionInfo != NULL)) {
         webview_print_log("WebView2 enabled");
         OutputDebugStringW(versionInfo);
         return 1;

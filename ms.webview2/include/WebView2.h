@@ -391,6 +391,13 @@ typedef interface ICoreWebView2WindowCloseRequestedEventHandler ICoreWebView2Win
 #endif 	/* __ICoreWebView2WindowCloseRequestedEventHandler_FWD_DEFINED__ */
 
 
+#ifndef __ICoreWebView2WindowFeatures_FWD_DEFINED__
+#define __ICoreWebView2WindowFeatures_FWD_DEFINED__
+typedef interface ICoreWebView2WindowFeatures ICoreWebView2WindowFeatures;
+
+#endif 	/* __ICoreWebView2WindowFeatures_FWD_DEFINED__ */
+
+
 #ifndef __ICoreWebView2ZoomFactorChangedEventHandler_FWD_DEFINED__
 #define __ICoreWebView2ZoomFactorChangedEventHandler_FWD_DEFINED__
 typedef interface ICoreWebView2ZoomFactorChangedEventHandler ICoreWebView2ZoomFactorChangedEventHandler;
@@ -414,6 +421,7 @@ extern "C"{
 
 /* library WebView2 */
 /* [version][uuid] */ 
+
 
 
 
@@ -581,20 +589,10 @@ typedef struct COREWEBVIEW2_PHYSICAL_KEY_STATUS
     BOOL IsKeyReleased;
     } 	COREWEBVIEW2_PHYSICAL_KEY_STATUS;
 
-STDAPI CreateCoreWebView2EnvironmentWithOptions(
-    PCWSTR browserExecutableFolder,
-    PCWSTR userDataFolder,
-    ICoreWebView2EnvironmentOptions* environmentOptions,
-    ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler* environment_created_handler);
-STDAPI CreateCoreWebView2Environment(
-    ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler* environment_created_handler);
-STDAPI GetAvailableCoreWebView2BrowserVersionString(
-    PCWSTR browserExecutableFolder,
-    LPWSTR* versionInfo);
-STDAPI CompareBrowserVersions(
-    PCWSTR version1,
-    PCWSTR version2,
-    int* result);
+STDAPI CreateCoreWebView2EnvironmentWithOptions(PCWSTR browserExecutableFolder, PCWSTR userDataFolder, ICoreWebView2EnvironmentOptions* environmentOptions, ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler* environment_created_handler);
+STDAPI CreateCoreWebView2Environment(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler* environment_created_handler);
+STDAPI GetAvailableCoreWebView2BrowserVersionString(PCWSTR browserExecutableFolder, LPWSTR* versionInfo);
+STDAPI CompareBrowserVersions(PCWSTR version1, PCWSTR version2, int* result);
 
 EXTERN_C const IID LIBID_WebView2;
 
@@ -609,7 +607,7 @@ EXTERN_C const IID IID_ICoreWebView2AcceleratorKeyPressedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("9224476E-D8C3-4EB7-BB65-2FD7792B27CE")
+    MIDL_INTERFACE("9f760f8a-fb79-42be-9990-7b56900fa9c7")
     ICoreWebView2AcceleratorKeyPressedEventArgs : public IUnknown
     {
     public:
@@ -739,7 +737,7 @@ EXTERN_C const IID IID_ICoreWebView2AcceleratorKeyPressedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("A7D303F9-503C-4B7E-BC40-5C7CE6CABAAA")
+    MIDL_INTERFACE("b29c7e28-fa79-41a8-8e44-65811c76dcb2")
     ICoreWebView2AcceleratorKeyPressedEventHandler : public IUnknown
     {
     public:
@@ -821,7 +819,7 @@ EXTERN_C const IID IID_ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompleted
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("7082ABED-0591-428F-A722-60C2F814546B")
+    MIDL_INTERFACE("b99369f3-9b11-47b5-bc6f-8e7895fcea17")
     ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler : public IUnknown
     {
     public:
@@ -903,7 +901,7 @@ EXTERN_C const IID IID_ICoreWebView2CallDevToolsProtocolMethodCompletedHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("C20CF895-BA7C-493B-AB2E-8A6E3A3602A2")
+    MIDL_INTERFACE("5c4889f0-5ef6-4c5a-952c-d8f1b92d0574")
     ICoreWebView2CallDevToolsProtocolMethodCompletedHandler : public IUnknown
     {
     public:
@@ -985,7 +983,7 @@ EXTERN_C const IID IID_ICoreWebView2CapturePreviewCompletedHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("DCED64F8-D9C7-4A3C-B9FD-FBBCA0B43496")
+    MIDL_INTERFACE("697e05e9-3d8f-45fa-96f4-8ffe1ededaf5")
     ICoreWebView2CapturePreviewCompletedHandler : public IUnknown
     {
     public:
@@ -1065,7 +1063,7 @@ EXTERN_C const IID IID_ICoreWebView2;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("189B8AAF-0426-4748-B9AD-243F537EB46B")
+    MIDL_INTERFACE("76eceacb-0462-4d94-ac83-423a6793775e")
     ICoreWebView2 : public IUnknown
     {
     public:
@@ -1757,7 +1755,7 @@ EXTERN_C const IID IID_ICoreWebView2Controller;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("7CCC5C7F-8351-4572-9077-9C1C80913835")
+    MIDL_INTERFACE("4d00c0d1-9434-4eb6-8078-8697a560334f")
     ICoreWebView2Controller : public IUnknown
     {
     public:
@@ -2065,7 +2063,7 @@ EXTERN_C const IID IID_ICoreWebView2ContentLoadingEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("2A800835-2179-45D6-A745-6657E9A546B9")
+    MIDL_INTERFACE("0c8a1275-9b6b-4901-87ad-70df25bafa6e")
     ICoreWebView2ContentLoadingEventArgs : public IUnknown
     {
     public:
@@ -2155,7 +2153,7 @@ EXTERN_C const IID IID_ICoreWebView2ContentLoadingEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("7AF5CC82-AE19-4964-BD71-B9BC5F03E85D")
+    MIDL_INTERFACE("364471e7-f2be-4910-bdba-d72077d51c4b")
     ICoreWebView2ContentLoadingEventHandler : public IUnknown
     {
     public:
@@ -2237,7 +2235,7 @@ EXTERN_C const IID IID_ICoreWebView2DocumentTitleChangedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("6423D6B1-5A57-46C5-BA46-DBB3735EE7C9")
+    MIDL_INTERFACE("f5f2b923-953e-4042-9f95-f3a118e1afd4")
     ICoreWebView2DocumentTitleChangedEventHandler : public IUnknown
     {
     public:
@@ -2319,7 +2317,7 @@ EXTERN_C const IID IID_ICoreWebView2ContainsFullScreenElementChangedEventHandler
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("120888E3-4CAD-4EC2-B627-B2016D05612D")
+    MIDL_INTERFACE("e45d98b1-afef-45be-8baf-6c7728867f73")
     ICoreWebView2ContainsFullScreenElementChangedEventHandler : public IUnknown
     {
     public:
@@ -2401,7 +2399,7 @@ EXTERN_C const IID IID_ICoreWebView2CreateCoreWebView2ControllerCompletedHandler
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("86EF6808-3C3F-4C6F-975E-8CE0B98F70BA")
+    MIDL_INTERFACE("6c4819f3-c9b7-4260-8127-c9f5bde7f68c")
     ICoreWebView2CreateCoreWebView2ControllerCompletedHandler : public IUnknown
     {
     public:
@@ -2483,7 +2481,7 @@ EXTERN_C const IID IID_ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandle
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("8B4F98CE-DB0D-4E71-85FD-C4C4EF1F2630")
+    MIDL_INTERFACE("4e8a3389-c9d8-4bd2-b6b5-124fee6cc14d")
     ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler : public IUnknown
     {
     public:
@@ -2565,7 +2563,7 @@ EXTERN_C const IID IID_ICoreWebView2Deferral;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("A7ED8BF0-3EC9-4E39-8427-3D6F157BD285")
+    MIDL_INTERFACE("c10e7f7b-b585-46f0-a623-8befbf3e4ee0")
     ICoreWebView2Deferral : public IUnknown
     {
     public:
@@ -2643,7 +2641,7 @@ EXTERN_C const IID IID_ICoreWebView2DevToolsProtocolEventReceivedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("F661B1C2-5FF5-4700-B723-C439034539B4")
+    MIDL_INTERFACE("653c2959-bb3a-4377-8632-b58ada4e66c4")
     ICoreWebView2DevToolsProtocolEventReceivedEventArgs : public IUnknown
     {
     public:
@@ -2723,7 +2721,7 @@ EXTERN_C const IID IID_ICoreWebView2DevToolsProtocolEventReceivedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("8E1DED79-A40B-4271-8BE6-57640C167F4A")
+    MIDL_INTERFACE("e2fda4be-5456-406c-a261-3d452138362c")
     ICoreWebView2DevToolsProtocolEventReceivedEventHandler : public IUnknown
     {
     public:
@@ -2805,7 +2803,7 @@ EXTERN_C const IID IID_ICoreWebView2DevToolsProtocolEventReceiver;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("FE59C48C-540C-4A3C-8898-8E1602E0055D")
+    MIDL_INTERFACE("b32ca51a-8371-45e9-9317-af021d080367")
     ICoreWebView2DevToolsProtocolEventReceiver : public IUnknown
     {
     public:
@@ -2897,7 +2895,7 @@ EXTERN_C const IID IID_ICoreWebView2Environment;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("DA66D884-6DA8-410E-9630-8C48F8B3A40E")
+    MIDL_INTERFACE("b96d755e-0319-4e92-a296-23436f46a1fc")
     ICoreWebView2Environment : public IUnknown
     {
     public:
@@ -3029,7 +3027,7 @@ EXTERN_C const IID IID_ICoreWebView2EnvironmentOptions;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("97E9FBD9-646A-4B75-8682-149B71DACE59")
+    MIDL_INTERFACE("2fde08a8-1e9a-4766-8c05-95a9ceb9d1c5")
     ICoreWebView2EnvironmentOptions : public IUnknown
     {
     public:
@@ -3050,6 +3048,12 @@ EXTERN_C const IID IID_ICoreWebView2EnvironmentOptions;
         
         virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_TargetCompatibleBrowserVersion( 
             /* [in] */ LPCWSTR value) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_AllowSingleSignOnUsingOSPrimaryAccount( 
+            /* [retval][out] */ BOOL *allow) = 0;
+        
+        virtual /* [propput] */ HRESULT STDMETHODCALLTYPE put_AllowSingleSignOnUsingOSPrimaryAccount( 
+            /* [in] */ BOOL allow) = 0;
         
     };
     
@@ -3096,6 +3100,14 @@ EXTERN_C const IID IID_ICoreWebView2EnvironmentOptions;
             ICoreWebView2EnvironmentOptions * This,
             /* [in] */ LPCWSTR value);
         
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_AllowSingleSignOnUsingOSPrimaryAccount )( 
+            ICoreWebView2EnvironmentOptions * This,
+            /* [retval][out] */ BOOL *allow);
+        
+        /* [propput] */ HRESULT ( STDMETHODCALLTYPE *put_AllowSingleSignOnUsingOSPrimaryAccount )( 
+            ICoreWebView2EnvironmentOptions * This,
+            /* [in] */ BOOL allow);
+        
         END_INTERFACE
     } ICoreWebView2EnvironmentOptionsVtbl;
 
@@ -3137,6 +3149,12 @@ EXTERN_C const IID IID_ICoreWebView2EnvironmentOptions;
 #define ICoreWebView2EnvironmentOptions_put_TargetCompatibleBrowserVersion(This,value)	\
     ( (This)->lpVtbl -> put_TargetCompatibleBrowserVersion(This,value) ) 
 
+#define ICoreWebView2EnvironmentOptions_get_AllowSingleSignOnUsingOSPrimaryAccount(This,allow)	\
+    ( (This)->lpVtbl -> get_AllowSingleSignOnUsingOSPrimaryAccount(This,allow) ) 
+
+#define ICoreWebView2EnvironmentOptions_put_AllowSingleSignOnUsingOSPrimaryAccount(This,allow)	\
+    ( (This)->lpVtbl -> put_AllowSingleSignOnUsingOSPrimaryAccount(This,allow) ) 
+
 #endif /* COBJMACROS */
 
 
@@ -3159,7 +3177,7 @@ EXTERN_C const IID IID_ICoreWebView2ExecuteScriptCompletedHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("3B717C93-3ED5-4450-9B13-7F56AA367AC7")
+    MIDL_INTERFACE("49511172-cc67-4bca-9923-137112f4c4cc")
     ICoreWebView2ExecuteScriptCompletedHandler : public IUnknown
     {
     public:
@@ -3241,7 +3259,7 @@ EXTERN_C const IID IID_ICoreWebView2FocusChangedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("76E67C71-663F-4C17-B71A-9381CCF3B94B")
+    MIDL_INTERFACE("05ea24bd-6452-4926-9014-4b82b498135d")
     ICoreWebView2FocusChangedEventHandler : public IUnknown
     {
     public:
@@ -3323,7 +3341,7 @@ EXTERN_C const IID IID_ICoreWebView2HistoryChangedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("54C9B7D7-D9E9-4158-861F-F97E1C3C6631")
+    MIDL_INTERFACE("c79a420c-efd9-4058-9295-3e8b4bcab645")
     ICoreWebView2HistoryChangedEventHandler : public IUnknown
     {
     public:
@@ -3405,7 +3423,7 @@ EXTERN_C const IID IID_ICoreWebView2HttpHeadersCollectionIterator;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("4212F3A7-0FBC-4C9C-8118-17ED6370C1B3")
+    MIDL_INTERFACE("0702fc30-f43b-47bb-ab52-a42cb552ad9f")
     ICoreWebView2HttpHeadersCollectionIterator : public IUnknown
     {
     public:
@@ -3417,7 +3435,7 @@ EXTERN_C const IID IID_ICoreWebView2HttpHeadersCollectionIterator;
             /* [retval][out] */ BOOL *hasCurrent) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE MoveNext( 
-            /* [out] */ BOOL *hasNext) = 0;
+            /* [retval][out] */ BOOL *hasNext) = 0;
         
     };
     
@@ -3451,7 +3469,7 @@ EXTERN_C const IID IID_ICoreWebView2HttpHeadersCollectionIterator;
         
         HRESULT ( STDMETHODCALLTYPE *MoveNext )( 
             ICoreWebView2HttpHeadersCollectionIterator * This,
-            /* [out] */ BOOL *hasNext);
+            /* [retval][out] */ BOOL *hasNext);
         
         END_INTERFACE
     } ICoreWebView2HttpHeadersCollectionIteratorVtbl;
@@ -3507,7 +3525,7 @@ EXTERN_C const IID IID_ICoreWebView2HttpRequestHeaders;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("2C1F04DF-C90E-49E4-BD25-4A659300337B")
+    MIDL_INTERFACE("e86cac0e-5523-465c-b536-8fb9fc8c8c60")
     ICoreWebView2HttpRequestHeaders : public IUnknown
     {
     public:
@@ -3645,7 +3663,7 @@ EXTERN_C const IID IID_ICoreWebView2HttpResponseHeaders;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("B5F6D4D5-1BFF-4869-85B8-158153017B04")
+    MIDL_INTERFACE("03c5ff5a-9b45-4a88-881c-89a9f328619c")
     ICoreWebView2HttpResponseHeaders : public IUnknown
     {
     public:
@@ -3773,7 +3791,7 @@ EXTERN_C const IID IID_ICoreWebView2MoveFocusRequestedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("71922903-B180-49D0-AED2-C9F9D10064B1")
+    MIDL_INTERFACE("2d6aa13b-3839-4a15-92fc-d88b3c0d9c9d")
     ICoreWebView2MoveFocusRequestedEventArgs : public IUnknown
     {
     public:
@@ -3873,7 +3891,7 @@ EXTERN_C const IID IID_ICoreWebView2MoveFocusRequestedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("4B21D6DD-3DE7-47B0-8019-7D3ACE6E3631")
+    MIDL_INTERFACE("69035451-6dc7-4cb8-9bce-b2bd70ad289f")
     ICoreWebView2MoveFocusRequestedEventHandler : public IUnknown
     {
     public:
@@ -3955,7 +3973,7 @@ EXTERN_C const IID IID_ICoreWebView2NavigationCompletedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("361F5621-EA7F-4C55-95EC-3C5E6992EA4A")
+    MIDL_INTERFACE("30d68b7d-20d9-4752-a9ca-ec8448fbb5c1")
     ICoreWebView2NavigationCompletedEventArgs : public IUnknown
     {
     public:
@@ -4055,7 +4073,7 @@ EXTERN_C const IID IID_ICoreWebView2NavigationCompletedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("9F921239-20C4-455F-9E3F-6047A50E248B")
+    MIDL_INTERFACE("d33a35bf-1c49-4f98-93ab-006e0533fe1c")
     ICoreWebView2NavigationCompletedEventHandler : public IUnknown
     {
     public:
@@ -4137,7 +4155,7 @@ EXTERN_C const IID IID_ICoreWebView2NavigationStartingEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("EE1938CE-D385-4CB0-854B-F498F78C3D88")
+    MIDL_INTERFACE("5b495469-e119-438a-9b18-7604f25f2e49")
     ICoreWebView2NavigationStartingEventArgs : public IUnknown
     {
     public:
@@ -4277,7 +4295,7 @@ EXTERN_C const IID IID_ICoreWebView2NavigationStartingEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("073337A4-64D2-4C7E-AC9F-987F0F613497")
+    MIDL_INTERFACE("9adbe429-f36d-432b-9ddc-f8881fbd76e3")
     ICoreWebView2NavigationStartingEventHandler : public IUnknown
     {
     public:
@@ -4359,7 +4377,7 @@ EXTERN_C const IID IID_ICoreWebView2NewBrowserVersionAvailableEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("E82E8242-EE39-4A57-A065-E13256D60342")
+    MIDL_INTERFACE("f9a2976e-d34e-44fc-adee-81b6b57ca914")
     ICoreWebView2NewBrowserVersionAvailableEventHandler : public IUnknown
     {
     public:
@@ -4441,7 +4459,7 @@ EXTERN_C const IID IID_ICoreWebView2NewWindowRequestedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("9EDC7F5F-C6EA-4F3C-827B-A8880794C0A9")
+    MIDL_INTERFACE("34acb11c-fc37-4418-9132-f9c21d1eafb9")
     ICoreWebView2NewWindowRequestedEventArgs : public IUnknown
     {
     public:
@@ -4465,6 +4483,9 @@ EXTERN_C const IID IID_ICoreWebView2NewWindowRequestedEventArgs;
         
         virtual HRESULT STDMETHODCALLTYPE GetDeferral( 
             /* [retval][out] */ ICoreWebView2Deferral **deferral) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_WindowFeatures( 
+            /* [retval][out] */ ICoreWebView2WindowFeatures **windowFeatures) = 0;
         
     };
     
@@ -4515,6 +4536,10 @@ EXTERN_C const IID IID_ICoreWebView2NewWindowRequestedEventArgs;
             ICoreWebView2NewWindowRequestedEventArgs * This,
             /* [retval][out] */ ICoreWebView2Deferral **deferral);
         
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_WindowFeatures )( 
+            ICoreWebView2NewWindowRequestedEventArgs * This,
+            /* [retval][out] */ ICoreWebView2WindowFeatures **windowFeatures);
+        
         END_INTERFACE
     } ICoreWebView2NewWindowRequestedEventArgsVtbl;
 
@@ -4559,6 +4584,9 @@ EXTERN_C const IID IID_ICoreWebView2NewWindowRequestedEventArgs;
 #define ICoreWebView2NewWindowRequestedEventArgs_GetDeferral(This,deferral)	\
     ( (This)->lpVtbl -> GetDeferral(This,deferral) ) 
 
+#define ICoreWebView2NewWindowRequestedEventArgs_get_WindowFeatures(This,windowFeatures)	\
+    ( (This)->lpVtbl -> get_WindowFeatures(This,windowFeatures) ) 
+
 #endif /* COBJMACROS */
 
 
@@ -4581,7 +4609,7 @@ EXTERN_C const IID IID_ICoreWebView2NewWindowRequestedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("ACAA30EF-A40C-47BD-9CB9-D9C2AADC9FCB")
+    MIDL_INTERFACE("d4c185fe-c81c-4989-97af-2d3fa7ab5651")
     ICoreWebView2NewWindowRequestedEventHandler : public IUnknown
     {
     public:
@@ -4663,7 +4691,7 @@ EXTERN_C const IID IID_ICoreWebView2PermissionRequestedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("774B5EA1-3FAD-435C-B1FC-A77D1ACD5EAF")
+    MIDL_INTERFACE("973ae2ef-ff18-4894-8fb2-3c758f046810")
     ICoreWebView2PermissionRequestedEventArgs : public IUnknown
     {
     public:
@@ -4793,7 +4821,7 @@ EXTERN_C const IID IID_ICoreWebView2PermissionRequestedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("543B4ADE-9B0B-4748-9AB7-D76481B223AA")
+    MIDL_INTERFACE("15e1c6a3-c72a-4df3-91d7-d097fbec6bfd")
     ICoreWebView2PermissionRequestedEventHandler : public IUnknown
     {
     public:
@@ -4875,7 +4903,7 @@ EXTERN_C const IID IID_ICoreWebView2ProcessFailedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("EA45D1F4-75C0-471F-A6E9-803FBFF8FEF2")
+    MIDL_INTERFACE("8155a9a4-1474-4a86-8cae-151b0fa6b8ca")
     ICoreWebView2ProcessFailedEventArgs : public IUnknown
     {
     public:
@@ -4955,7 +4983,7 @@ EXTERN_C const IID IID_ICoreWebView2ProcessFailedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("7D2183F9-CCA8-40F2-91A9-EAFAD32C8A9B")
+    MIDL_INTERFACE("79e0aea4-990b-42d9-aa1d-0fcc2e5bc7f1")
     ICoreWebView2ProcessFailedEventHandler : public IUnknown
     {
     public:
@@ -5037,7 +5065,7 @@ EXTERN_C const IID IID_ICoreWebView2ScriptDialogOpeningEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("B8F6356E-24DC-4D74-90FE-AD071E11CB91")
+    MIDL_INTERFACE("7390bb70-abe0-4843-9529-f143b31b03d6")
     ICoreWebView2ScriptDialogOpeningEventArgs : public IUnknown
     {
     public:
@@ -5185,7 +5213,7 @@ EXTERN_C const IID IID_ICoreWebView2ScriptDialogOpeningEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("72D93789-2727-4A9B-A4FC-1B2609CBCBE3")
+    MIDL_INTERFACE("ef381bf9-afa8-4e37-91c4-8ac48524bdfb")
     ICoreWebView2ScriptDialogOpeningEventHandler : public IUnknown
     {
     public:
@@ -5267,7 +5295,7 @@ EXTERN_C const IID IID_ICoreWebView2Settings;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("203FBA37-6850-4DCC-A25A-58A351AC625D")
+    MIDL_INTERFACE("e562e4f0-d7fa-43ac-8d71-c05150499f00")
     ICoreWebView2Settings : public IUnknown
     {
     public:
@@ -5517,7 +5545,7 @@ EXTERN_C const IID IID_ICoreWebView2SourceChangedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("BD9A4BFB-BE19-40BD-968B-EBCF0D727EF3")
+    MIDL_INTERFACE("31e0e545-1dba-4266-8914-f63848a1f7d7")
     ICoreWebView2SourceChangedEventArgs : public IUnknown
     {
     public:
@@ -5597,7 +5625,7 @@ EXTERN_C const IID IID_ICoreWebView2SourceChangedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("8FEDD1A7-3A33-416F-AF81-881EEB001433")
+    MIDL_INTERFACE("3c067f9f-5388-4772-8b48-79f7ef1ab37c")
     ICoreWebView2SourceChangedEventHandler : public IUnknown
     {
     public:
@@ -5679,7 +5707,7 @@ EXTERN_C const IID IID_ICoreWebView2WebMessageReceivedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("B263B5AE-9C54-4B75-B632-40AE1A0B6912")
+    MIDL_INTERFACE("0f99a40c-e962-4207-9e92-e3d542eff849")
     ICoreWebView2WebMessageReceivedEventArgs : public IUnknown
     {
     public:
@@ -5779,7 +5807,7 @@ EXTERN_C const IID IID_ICoreWebView2WebMessageReceivedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("199328C8-9964-4F5F-84E6-E875B1B763D6")
+    MIDL_INTERFACE("57213f19-00e6-49fa-8e07-898ea01ecbd2")
     ICoreWebView2WebMessageReceivedEventHandler : public IUnknown
     {
     public:
@@ -5861,7 +5889,7 @@ EXTERN_C const IID IID_ICoreWebView2WebResourceRequest;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("11B02254-B827-49F6-8974-30F6E6C55AF6")
+    MIDL_INTERFACE("97055cd4-512c-4264-8b5f-e3f446cea6a5")
     ICoreWebView2WebResourceRequest : public IUnknown
     {
     public:
@@ -6001,7 +6029,7 @@ EXTERN_C const IID IID_ICoreWebView2WebResourceRequestedEventArgs;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("2D7B3282-83B1-41CA-8BBF-FF18F6BFE320")
+    MIDL_INTERFACE("453e667f-12c7-49d4-be6d-ddbe7956f57a")
     ICoreWebView2WebResourceRequestedEventArgs : public IUnknown
     {
     public:
@@ -6121,7 +6149,7 @@ EXTERN_C const IID IID_ICoreWebView2WebResourceRequestedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("F6DC79F2-E1FA-4534-8968-4AFF10BBAA32")
+    MIDL_INTERFACE("ab00b74c-15f1-4646-80e8-e76341d25d71")
     ICoreWebView2WebResourceRequestedEventHandler : public IUnknown
     {
     public:
@@ -6203,7 +6231,7 @@ EXTERN_C const IID IID_ICoreWebView2WebResourceResponse;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("5953D1FC-B08F-46DD-AFD3-66B172419CD0")
+    MIDL_INTERFACE("aafcc94f-fa27-48fd-97df-830ef75aaec9")
     ICoreWebView2WebResourceResponse : public IUnknown
     {
     public:
@@ -6343,7 +6371,7 @@ EXTERN_C const IID IID_ICoreWebView2WindowCloseRequestedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("63C89928-AD32-4421-A0E4-EC99B34AA97E")
+    MIDL_INTERFACE("5c19e9e0-092f-486b-affa-ca8231913039")
     ICoreWebView2WindowCloseRequestedEventHandler : public IUnknown
     {
     public:
@@ -6414,6 +6442,176 @@ EXTERN_C const IID IID_ICoreWebView2WindowCloseRequestedEventHandler;
 #endif 	/* __ICoreWebView2WindowCloseRequestedEventHandler_INTERFACE_DEFINED__ */
 
 
+#ifndef __ICoreWebView2WindowFeatures_INTERFACE_DEFINED__
+#define __ICoreWebView2WindowFeatures_INTERFACE_DEFINED__
+
+/* interface ICoreWebView2WindowFeatures */
+/* [unique][object][uuid] */ 
+
+
+EXTERN_C const IID IID_ICoreWebView2WindowFeatures;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("5eaf559f-b46e-4397-8860-e422f287ff1e")
+    ICoreWebView2WindowFeatures : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE HasPosition( 
+            /* [retval][out] */ BOOL *hasPosition) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE HasSize( 
+            /* [retval][out] */ BOOL *hasSize) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Left( 
+            /* [retval][out] */ UINT32 *left) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Top( 
+            /* [retval][out] */ UINT32 *top) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Height( 
+            /* [retval][out] */ UINT32 *height) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Width( 
+            /* [retval][out] */ UINT32 *width) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_MenuBar( 
+            /* [retval][out] */ BOOL *menuBar) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Status( 
+            /* [retval][out] */ BOOL *status) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_Toolbar( 
+            /* [retval][out] */ BOOL *toolbar) = 0;
+        
+        virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_ScrollBars( 
+            /* [retval][out] */ BOOL *scrollBars) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct ICoreWebView2WindowFeaturesVtbl
+    {
+        BEGIN_INTERFACE
+        
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            ICoreWebView2WindowFeatures * This);
+        
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            ICoreWebView2WindowFeatures * This);
+        
+        HRESULT ( STDMETHODCALLTYPE *HasPosition )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ BOOL *hasPosition);
+        
+        HRESULT ( STDMETHODCALLTYPE *HasSize )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ BOOL *hasSize);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Left )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ UINT32 *left);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Top )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ UINT32 *top);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Height )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ UINT32 *height);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Width )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ UINT32 *width);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_MenuBar )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ BOOL *menuBar);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Status )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ BOOL *status);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_Toolbar )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ BOOL *toolbar);
+        
+        /* [propget] */ HRESULT ( STDMETHODCALLTYPE *get_ScrollBars )( 
+            ICoreWebView2WindowFeatures * This,
+            /* [retval][out] */ BOOL *scrollBars);
+        
+        END_INTERFACE
+    } ICoreWebView2WindowFeaturesVtbl;
+
+    interface ICoreWebView2WindowFeatures
+    {
+        CONST_VTBL struct ICoreWebView2WindowFeaturesVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define ICoreWebView2WindowFeatures_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define ICoreWebView2WindowFeatures_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define ICoreWebView2WindowFeatures_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define ICoreWebView2WindowFeatures_HasPosition(This,hasPosition)	\
+    ( (This)->lpVtbl -> HasPosition(This,hasPosition) ) 
+
+#define ICoreWebView2WindowFeatures_HasSize(This,hasSize)	\
+    ( (This)->lpVtbl -> HasSize(This,hasSize) ) 
+
+#define ICoreWebView2WindowFeatures_get_Left(This,left)	\
+    ( (This)->lpVtbl -> get_Left(This,left) ) 
+
+#define ICoreWebView2WindowFeatures_get_Top(This,top)	\
+    ( (This)->lpVtbl -> get_Top(This,top) ) 
+
+#define ICoreWebView2WindowFeatures_get_Height(This,height)	\
+    ( (This)->lpVtbl -> get_Height(This,height) ) 
+
+#define ICoreWebView2WindowFeatures_get_Width(This,width)	\
+    ( (This)->lpVtbl -> get_Width(This,width) ) 
+
+#define ICoreWebView2WindowFeatures_get_MenuBar(This,menuBar)	\
+    ( (This)->lpVtbl -> get_MenuBar(This,menuBar) ) 
+
+#define ICoreWebView2WindowFeatures_get_Status(This,status)	\
+    ( (This)->lpVtbl -> get_Status(This,status) ) 
+
+#define ICoreWebView2WindowFeatures_get_Toolbar(This,toolbar)	\
+    ( (This)->lpVtbl -> get_Toolbar(This,toolbar) ) 
+
+#define ICoreWebView2WindowFeatures_get_ScrollBars(This,scrollBars)	\
+    ( (This)->lpVtbl -> get_ScrollBars(This,scrollBars) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __ICoreWebView2WindowFeatures_INTERFACE_DEFINED__ */
+
+
 #ifndef __ICoreWebView2ZoomFactorChangedEventHandler_INTERFACE_DEFINED__
 #define __ICoreWebView2ZoomFactorChangedEventHandler_INTERFACE_DEFINED__
 
@@ -6425,7 +6623,7 @@ EXTERN_C const IID IID_ICoreWebView2ZoomFactorChangedEventHandler;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("F1828246-8B98-4274-B708-ECDB6BF3843A")
+    MIDL_INTERFACE("b52d71d6-c4df-4543-a90c-64a3e60f38cb")
     ICoreWebView2ZoomFactorChangedEventHandler : public IUnknown
     {
     public:

@@ -762,7 +762,9 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
     w->priv.hwnd = hwnd;
     if (webview_webview2_enabled) {
       w->priv.webview2 = CreateWebView2(hwnd, w->url);
-      WebView2RegisterCallback(w->priv.webview2, &WebView2Callback, w);
+      if (w->priv.webview2 != NULL) {
+        WebView2RegisterCallback(w->priv.webview2, &WebView2Callback, w);
+      }
       return TRUE;
     }
     return EmbedBrowserObject(w);

@@ -927,13 +927,21 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
         webBrowser2->lpVtbl->Release(webBrowser2);
       }
       if (r != S_FALSE) {
-        break;
+        return 0;
       }
     }
-  default:
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+    break;
+  case WM_WEBVIEW_DISPATCH:
+    if (webview_webview2_enabled && !(w->priv.webview2->ready)) {
+      webview_print_log("re post webview dispatch");
+      Sleep(500);
+      PostMessageW(msg.hwnd, msg.message, msg.wParam, msg.lParam);
+      return 0;
+    }
+    break;
   }
+  TranslateMessage(&msg);
+  DispatchMessage(&msg);
   return 0;
 }
 

@@ -117,6 +117,7 @@ typedef struct webview2_struct {
   WebView2CallbackFn cb;
   void *context;
   ICoreWebView2 *webview;
+  unsigned char ready;
   ICoreWebView2Controller *controller;
   ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler env_created_handler;
   ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl env_created_handler_vtbl;
@@ -124,6 +125,8 @@ typedef struct webview2_struct {
   ICoreWebView2CreateCoreWebView2ControllerCompletedHandlerVtbl controller_created_handler_vtbl;
   ICoreWebView2WebMessageReceivedEventHandler message_received_event_handler;
   ICoreWebView2WebMessageReceivedEventHandlerVtbl message_received_event_handler_vtbl;
+  ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler add_script_on_document_created_handler;
+  ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandlerVtbl add_script_on_document_created_handler_vtbl;
 } webview2;
 
 #define WEBVIEW2_PTR_FROM(_cp, _field) \
@@ -149,6 +152,13 @@ static HRESULT WebView2WebMessageReceivedEventHandleInvoke(ICoreWebView2WebMessa
   return S_OK;
 }
 
+static HRESULT AddScriptToExecuteOnDocumentCreated_Invoke(ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler * This, HRESULT errorCode, LPCWSTR id) {
+  webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, add_script_on_document_created_handler);
+  webview_print_log("AddScriptToExecuteOnDocumentCreated");
+  pwv2->ready = 1;
+  return S_OK;
+}
+
 static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler * This, HRESULT result, ICoreWebView2Controller *webViewController) {
   webview_print_log("CreateWebView2Controller_Invoke()");
   ICoreWebView2 *webview;
@@ -170,7 +180,7 @@ static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2Co
   GetClientRect(pwv2->hwnd, &bounds);
   webViewController->lpVtbl->put_Bounds(webViewController, bounds);
 
-  webview->lpVtbl->AddScriptToExecuteOnDocumentCreated(webview, L"window.external={invoke:s=>window.chrome.webview.postMessage(s)}", NULL);
+  webview->lpVtbl->AddScriptToExecuteOnDocumentCreated(webview, L"window.external={invoke:s=>window.chrome.webview.postMessage(s)}", &pwv2->add_script_on_document_created_handler);
 
   EventRegistrationToken token;
   webview->lpVtbl->add_WebMessageReceived(webview, &pwv2->message_received_event_handler, &token);
@@ -228,6 +238,11 @@ static void InitWebView2(webview2 *pwv2) {
   pwv2->message_received_event_handler_vtbl.Release = (ULONG (*)(ICoreWebView2WebMessageReceivedEventHandler * This)) &NoOpRelease;
   pwv2->message_received_event_handler_vtbl.Invoke = &WebView2WebMessageReceivedEventHandleInvoke;
   pwv2->message_received_event_handler.lpVtbl = &pwv2->message_received_event_handler_vtbl;
+  pwv2->add_script_on_document_created_handler_vtbl.QueryInterface = (HRESULT (*)(ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler * This, REFIID riid, void **ppvObject)) &NoOpQueryInterface;
+  pwv2->add_script_on_document_created_handler_vtbl.AddRef = (ULONG (*)(ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler * This)) &NoOpAddRef;
+  pwv2->add_script_on_document_created_handler_vtbl.Release = (ULONG (*)(ICoreWebView2AddScriptToExecuteOnDocumentCreatedCompletedHandler * This)) &NoOpRelease;
+  pwv2->add_script_on_document_created_handler_vtbl.Invoke = &AddScriptToExecuteOnDocumentCreated_Invoke;
+  pwv2->add_script_on_document_created_handler.lpVtbl = &pwv2->add_script_on_document_created_handler_vtbl;
 }
 
 WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
@@ -237,6 +252,7 @@ WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
     pwv2 = (webview2 *)GlobalAlloc(GMEM_FIXED, sizeof(webview2));
     if (pwv2 != NULL) {
       InitWebView2(pwv2);
+      pwv2->ready = 0;
       pwv2->webview = NULL;
       pwv2->hwnd = hwnd;
       pwv2->url = url;
@@ -300,6 +316,7 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
       }
     }
   }
+  webview_print_log("WebView2Eval() not available yet");
   return 1;
 }
 

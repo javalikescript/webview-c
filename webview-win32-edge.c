@@ -118,6 +118,7 @@ typedef struct webview2_struct {
   void *context;
   ICoreWebView2 *webview;
   unsigned char ready;
+  char *jsToEval;
   ICoreWebView2Controller *controller;
   ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler env_created_handler;
   ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandlerVtbl env_created_handler_vtbl;
@@ -156,6 +157,7 @@ static HRESULT AddScriptToExecuteOnDocumentCreated_Invoke(ICoreWebView2AddScript
   webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, add_script_on_document_created_handler);
   webview_print_log("AddScriptToExecuteOnDocumentCreated");
   pwv2->ready = 1;
+  PostMessageW(pwv2->hwnd, WM_WEBVIEW_READY, 0, 0);
   return S_OK;
 }
 
@@ -253,6 +255,7 @@ WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
     if (pwv2 != NULL) {
       InitWebView2(pwv2);
       pwv2->ready = 0;
+      pwv2->jsToEval = NULL;
       pwv2->webview = NULL;
       pwv2->hwnd = hwnd;
       pwv2->url = url;

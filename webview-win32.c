@@ -27,6 +27,7 @@
 #pragma comment(lib, "oleaut32.lib")
 
 #define WM_WEBVIEW_DISPATCH (WM_APP + 1)
+#define WM_WEBVIEW_READY (WM_APP + 2)
 
 typedef struct {
   IOleInPlaceFrame frame;
@@ -791,6 +792,16 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
       }
     }
     return TRUE;
+  case WM_WEBVIEW_READY: {
+    webview_print_log("WebView ready");
+    if (webview_webview2_enabled && (w->priv.webview2->jsToEval != NULL)) {
+      char *js = w->priv.webview2->jsToEval;
+      w->priv.webview2->jsToEval = NULL;
+      webview_eval(w, js);
+      free(js);
+    }
+    return TRUE;
+  }
   case WM_WEBVIEW_DISPATCH: {
     webview_dispatch_fn f = (webview_dispatch_fn)wParam;
     void *arg = (void *)lParam;
@@ -931,14 +942,6 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
       }
     }
     break;
-  case WM_WEBVIEW_DISPATCH:
-    if (webview_webview2_enabled && !(w->priv.webview2->ready)) {
-      webview_print_log("re post webview dispatch");
-      Sleep(500);
-      PostMessageW(msg.hwnd, msg.message, msg.wParam, msg.lParam);
-      return 0;
-    }
-    break;
   }
   TranslateMessage(&msg);
   DispatchMessage(&msg);
@@ -947,7 +950,25 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
 
 WEBVIEW_API int webview_eval(struct webview *w, const char *js) {
   if (webview_webview2_enabled) {
-    return WebView2Eval(w->priv.webview2, js);
+    webview2 *pwv2 = w->priv.webview2;
+    if (pwv2->ready) {
+      return WebView2Eval(pwv2, js);
+    }
+    char *jsToEval = pwv2->jsToEval;
+    webview_print_log("defer eval as webview2 not ready");
+    if (jsToEval == NULL) {
+      int n = strlen(js) + 1;
+      char *newJsToEval = (char *)malloc(n);
+      strncpy(newJsToEval, js, n);
+      pwv2->jsToEval = newJsToEval;
+    } else {
+      int n = strlen(jsToEval) + 1 + strlen(js) + 1;
+      char *newJsToEval = (char *)malloc(n);
+      snprintf(newJsToEval, n, "%s\n%s", jsToEval, js);
+      free(jsToEval);
+      pwv2->jsToEval = newJsToEval;
+    }
+    return 0;
   }
   IWebBrowser2 *webBrowser2;
   IHTMLDocument2 *htmlDoc2;

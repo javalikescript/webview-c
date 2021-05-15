@@ -325,7 +325,7 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
 
 static int WebView2Enable() {
   TCHAR modulePath[MAX_PATH + 22];
-  webview_print_log("Loading WebView2Loader (0.9.622)");
+  webview_print_log("Loading WebView2Loader (1.0.818)");
   findWebView2BrowserExecutableFolder();
   getWebView2LoaderFileName(modulePath);
   webview_print_log(modulePath);

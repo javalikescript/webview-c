@@ -47,7 +47,7 @@ The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder co
 
 The [WebView2 Runtime](https://docs.microsoft.com/en-gb/microsoft-edge/webview2/concepts/distribution#understanding-the-webview2-runtime) shall be installed with the same architecture, x64 or x86.
 
-There is a minimum Microsoft Edge version required, here 86.0.622.22 for 1.0.622.22.
+There is a minimum Microsoft Edge version required, here 86.0.616 (full compatibility: 90.0.818) for 1.0.818.
 
 The WebView2 SDK may fail to auto detect the WebView2 Runtime installation path to use,
 you could indicate the correct installation path by using the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`.

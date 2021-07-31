@@ -114,6 +114,7 @@ typedef HRESULT (*CreateCoreWebView2EnvironmentWithOptionsFnType) (PCWSTR browse
 typedef struct webview2_struct {
   HWND hwnd;
   const char *url;
+  int debug;
   WebView2CallbackFn cb;
   void *context;
   ICoreWebView2 *webview;
@@ -177,6 +178,13 @@ static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2Co
 
   webViewController->lpVtbl->get_CoreWebView2(webViewController, &webview);
   pwv2->webview = webview;
+
+  ICoreWebView2Settings* settings;
+  webview->lpVtbl->get_Settings(webview, &settings);
+  if (settings->lpVtbl != NULL) {
+    settings->lpVtbl->put_AreDevToolsEnabled(settings, pwv2->debug);
+    settings->lpVtbl->put_AreDefaultContextMenusEnabled(settings, pwv2->debug);
+  }
 
   RECT bounds;
   GetClientRect(pwv2->hwnd, &bounds);
@@ -247,7 +255,7 @@ static void InitWebView2(webview2 *pwv2) {
   pwv2->add_script_on_document_created_handler.lpVtbl = &pwv2->add_script_on_document_created_handler_vtbl;
 }
 
-WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
+WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url, int debug) {
   WCHAR dirname[MAX_PATH];
   webview2 *pwv2 = NULL;
   if (CreateCoreWebView2EnvironmentFn != NULL) {
@@ -259,6 +267,7 @@ WEBVIEW2_WIN32_API webview2 * CreateWebView2(HWND hwnd, const char *url) {
       pwv2->webview = NULL;
       pwv2->hwnd = hwnd;
       pwv2->url = url;
+      pwv2->debug = debug;
       PCWSTR userDataFolder = getUserData(dirname, MAX_PATH);
       HRESULT hr = CreateCoreWebView2EnvironmentFn(NULL, userDataFolder, NULL, &pwv2->env_created_handler);
       if (FAILED(hr)) {

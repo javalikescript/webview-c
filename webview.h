@@ -115,13 +115,15 @@ enum webview_dialog_type {
   WEBVIEW_DIALOG_TYPE_ALERT = 2
 };
 
-#define WEBVIEW_DIALOG_FLAG_FILE (0 << 0)
-#define WEBVIEW_DIALOG_FLAG_DIRECTORY (1 << 0)
+enum webview_dialog_flag {
+  WEBVIEW_DIALOG_FLAG_FILE = (0 << 0),
+  WEBVIEW_DIALOG_FLAG_DIRECTORY = (1 << 0),
 
-#define WEBVIEW_DIALOG_FLAG_INFO (1 << 1)
-#define WEBVIEW_DIALOG_FLAG_WARNING (2 << 1)
-#define WEBVIEW_DIALOG_FLAG_ERROR (3 << 1)
-#define WEBVIEW_DIALOG_FLAG_ALERT_MASK (3 << 1)
+  WEBVIEW_DIALOG_FLAG_INFO = (1 << 1),
+  WEBVIEW_DIALOG_FLAG_WARNING = (2 << 1),
+  WEBVIEW_DIALOG_FLAG_ERROR = (3 << 1),
+  WEBVIEW_DIALOG_FLAG_ALERT_MASK = (3 << 1),
+};
 
 typedef void (*webview_dispatch_fn)(struct webview *w, void *arg);
 

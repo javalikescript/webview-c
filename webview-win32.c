@@ -26,6 +26,31 @@
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")
 
+#define CINTERFACE
+#include <windows.h>
+
+#include <commctrl.h>
+#include <exdisp.h>
+#include <mshtmhst.h>
+#include <mshtml.h>
+#include <shobjidl.h>
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+typedef struct webview2_struct webview2;
+
+struct webview_priv {
+  HWND hwnd;
+  IOleObject **browser;
+  BOOL is_fullscreen;
+  DWORD saved_style;
+  DWORD saved_ex_style;
+  RECT saved_rect;
+  webview2 *webview2;
+};
+
 #define WM_WEBVIEW_DISPATCH (WM_APP + 1)
 #define WM_WEBVIEW_READY (WM_APP + 2)
 
@@ -548,11 +573,11 @@ static HRESULT STDMETHODCALLTYPE SP_QueryService(IServiceProvider FAR *This, REF
 static IServiceProviderVtbl MyServiceProviderTable = {SP_QueryInterface, SP_AddRef, SP_Release, SP_QueryService};
 
 static void UnEmbedBrowserObject(struct webview *w) {
-  if (w->priv.browser != NULL) {
-    (*w->priv.browser)->lpVtbl->Close(*w->priv.browser, OLECLOSE_NOSAVE);
-    (*w->priv.browser)->lpVtbl->Release(*w->priv.browser);
-    GlobalFree(w->priv.browser);
-    w->priv.browser = NULL;
+  if (w->priv->browser != NULL) {
+    (*w->priv->browser)->lpVtbl->Close(*w->priv->browser, OLECLOSE_NOSAVE);
+    (*w->priv->browser)->lpVtbl->Release(*w->priv->browser);
+    GlobalFree(w->priv->browser);
+    w->priv->browser = NULL;
   }
 }
 
@@ -566,13 +591,13 @@ static int EmbedBrowserObject(struct webview *w) {
   if (browser == NULL) {
     goto error;
   }
-  w->priv.browser = browser;
+  w->priv->browser = browser;
 
   _iOleClientSiteEx = (_IOleClientSiteEx *)(browser + 1);
   _iOleClientSiteEx->client.lpVtbl = &MyIOleClientSiteTable;
   _iOleClientSiteEx->inplace.inplace.lpVtbl = &MyIOleInPlaceSiteTable;
   _iOleClientSiteEx->inplace.frame.frame.lpVtbl = &MyIOleInPlaceFrameTable;
-  _iOleClientSiteEx->inplace.frame.window = w->priv.hwnd;
+  _iOleClientSiteEx->inplace.frame.window = w->priv->hwnd;
   _iOleClientSiteEx->ui.ui.lpVtbl = &MyIDocHostUIHandlerTable;
   _iOleClientSiteEx->external.lpVtbl = &ExternalDispatchTable;
   _iOleClientSiteEx->provider.provider.lpVtbl = &MyServiceProviderTable;
@@ -604,10 +629,10 @@ static int EmbedBrowserObject(struct webview *w) {
   if (OleSetContainedObject((struct IUnknown *)(*browser), TRUE) != S_OK) {
     goto error;
   }
-  GetClientRect(w->priv.hwnd, &rect);
+  GetClientRect(w->priv->hwnd, &rect);
   if ((*browser)->lpVtbl->DoVerb((*browser), OLEIVERB_SHOW, NULL,
                                  (IOleClientSite *)_iOleClientSiteEx, -1,
-                                 w->priv.hwnd, &rect) != S_OK) {
+                                 w->priv->hwnd, &rect) != S_OK) {
     goto error;
   }
   if ((*browser)->lpVtbl->QueryInterface((*browser),
@@ -644,7 +669,7 @@ static int DisplayHTMLPage(struct webview *w) {
   IOleObject *browserObject;
   SAFEARRAY *sfArray;
   VARIANT *pVar;
-  browserObject = *w->priv.browser;
+  browserObject = *w->priv->browser;
   int isDataURL = 0;
   const char *webview_url = webview_check_url(w->url);
   if (!browserObject->lpVtbl->QueryInterface(
@@ -734,7 +759,7 @@ static int DisplayHTMLPage(struct webview *w) {
   return (-5);
 }
 
-#include "webview2.h"
+#include "WebView2.h"
 
 #if defined(__WebView2_LIBRARY_DEFINED__)
 #include "webview-win32-edge.c"
@@ -760,19 +785,19 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
   switch (uMsg) {
   case WM_CREATE:
     w = (struct webview *)((CREATESTRUCT *)lParam)->lpCreateParams;
-    w->priv.hwnd = hwnd;
+    w->priv->hwnd = hwnd;
     if (webview_webview2_enabled) {
-      w->priv.webview2 = CreateWebView2(hwnd, w->url, w->debug);
-      if (w->priv.webview2 != NULL) {
-        WebView2RegisterCallback(w->priv.webview2, &WebView2Callback, w);
+      w->priv->webview2 = CreateWebView2(hwnd, w->url, w->debug);
+      if (w->priv->webview2 != NULL) {
+        WebView2RegisterCallback(w->priv->webview2, &WebView2Callback, w);
       }
       return TRUE;
     }
     return EmbedBrowserObject(w);
   case WM_DESTROY:
     if (webview_webview2_enabled) {
-      ReleaseWebView2(w->priv.webview2);
-      w->priv.webview2 = NULL;
+      ReleaseWebView2(w->priv->webview2);
+      w->priv->webview2 = NULL;
     } else {
       UnEmbedBrowserObject(w);
     }
@@ -781,10 +806,10 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
   case WM_SIZE:
     GetClientRect(hwnd, &rect);
     if (webview_webview2_enabled) {
-      WebView2SetBounds(w->priv.webview2, rect);
+      WebView2SetBounds(w->priv->webview2, rect);
     } else {
       IWebBrowser2 *webBrowser2;
-      IOleObject *browser = *w->priv.browser;
+      IOleObject *browser = *w->priv->browser;
       if (browser->lpVtbl->QueryInterface(browser, iid_unref(&IID_IWebBrowser2),
                                           (void **)&webBrowser2) == S_OK) {
         webBrowser2->lpVtbl->put_Width(webBrowser2, rect.right);
@@ -794,9 +819,9 @@ static LRESULT CALLBACK wndproc(HWND hwnd, UINT uMsg, WPARAM wParam,
     return TRUE;
   case WM_WEBVIEW_READY: {
     webview_print_log("WebView ready");
-    if (webview_webview2_enabled && (w->priv.webview2->jsToEval != NULL)) {
-      char *js = w->priv.webview2->jsToEval;
-      w->priv.webview2->jsToEval = NULL;
+    if (webview_webview2_enabled && (w->priv->webview2->jsToEval != NULL)) {
+      char *js = w->priv->webview2->jsToEval;
+      w->priv->webview2->jsToEval = NULL;
       webview_eval(w, js);
       free(js);
     }
@@ -886,25 +911,30 @@ WEBVIEW_API int webview_init(struct webview *w) {
   rect.bottom = rect.bottom - rect.top + top;
   rect.top = top;
 
-  w->priv.hwnd =
+  w->priv = (struct webview_priv *)malloc(sizeof(struct webview_priv));
+  if (!w->priv) {
+    return -1;
+  }
+  memset(w->priv, 0, sizeof(struct webview_priv));
+  w->priv->hwnd =
       CreateWindowEx(0, classname, w->title, style, rect.left, rect.top,
                      rect.right - rect.left, rect.bottom - rect.top,
                      HWND_DESKTOP, NULL, hInstance, (void *)w);
-  if (w->priv.hwnd == 0) {
+  if (w->priv->hwnd == 0) {
     OleUninitialize();
     return -1;
   }
 
-  SetWindowLongPtr(w->priv.hwnd, GWLP_USERDATA, (LONG_PTR)w);
+  SetWindowLongPtr(w->priv->hwnd, GWLP_USERDATA, (LONG_PTR)w);
 
   if (!webview_webview2_enabled) {
     DisplayHTMLPage(w);
   }
 
-  SetWindowText(w->priv.hwnd, w->title);
-  ShowWindow(w->priv.hwnd, SW_SHOWDEFAULT);
-  UpdateWindow(w->priv.hwnd);
-  SetFocus(w->priv.hwnd);
+  SetWindowText(w->priv->hwnd, w->title);
+  ShowWindow(w->priv->hwnd, SW_SHOWDEFAULT);
+  UpdateWindow(w->priv->hwnd);
+  SetFocus(w->priv->hwnd);
 
   return 0;
 }
@@ -925,7 +955,7 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
     if (!webview_webview2_enabled) {
       HRESULT r = S_OK;
       IWebBrowser2 *webBrowser2;
-      IOleObject *browser = *w->priv.browser;
+      IOleObject *browser = *w->priv->browser;
       if (browser->lpVtbl->QueryInterface(browser, iid_unref(&IID_IWebBrowser2),
                                           (void **)&webBrowser2) == S_OK) {
         IOleInPlaceActiveObject *pIOIPAO;
@@ -950,7 +980,7 @@ WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
 
 WEBVIEW_API int webview_eval(struct webview *w, const char *js) {
   if (webview_webview2_enabled) {
-    webview2 *pwv2 = w->priv.webview2;
+    webview2 *pwv2 = w->priv->webview2;
     if (pwv2->ready) {
       return WebView2Eval(pwv2, js);
     }
@@ -974,8 +1004,8 @@ WEBVIEW_API int webview_eval(struct webview *w, const char *js) {
   IHTMLDocument2 *htmlDoc2;
   IDispatch *docDispatch;
   IDispatch *scriptDispatch;
-  if ((*w->priv.browser)
-          ->lpVtbl->QueryInterface((*w->priv.browser),
+  if ((*w->priv->browser)
+          ->lpVtbl->QueryInterface((*w->priv->browser),
                                    iid_unref(&IID_IWebBrowser2),
                                    (void **)&webBrowser2) != S_OK) {
     return -1;
@@ -1034,49 +1064,49 @@ WEBVIEW_API int webview_eval(struct webview *w, const char *js) {
 
 WEBVIEW_API void webview_dispatch(struct webview *w, webview_dispatch_fn fn,
                                   void *arg) {
-  PostMessageW(w->priv.hwnd, WM_WEBVIEW_DISPATCH, (WPARAM)fn, (LPARAM)arg);
+  PostMessageW(w->priv->hwnd, WM_WEBVIEW_DISPATCH, (WPARAM)fn, (LPARAM)arg);
 }
 
 WEBVIEW_API void webview_set_title(struct webview *w, const char *title) {
-  SetWindowText(w->priv.hwnd, title);
+  SetWindowText(w->priv->hwnd, title);
 }
 
 WEBVIEW_API void webview_set_fullscreen(struct webview *w, int fullscreen) {
-  if (w->priv.is_fullscreen == !!fullscreen) {
+  if (w->priv->is_fullscreen == !!fullscreen) {
     return;
   }
-  if (w->priv.is_fullscreen == 0) {
-    w->priv.saved_style = GetWindowLong(w->priv.hwnd, GWL_STYLE);
-    w->priv.saved_ex_style = GetWindowLong(w->priv.hwnd, GWL_EXSTYLE);
-    GetWindowRect(w->priv.hwnd, &w->priv.saved_rect);
+  if (w->priv->is_fullscreen == 0) {
+    w->priv->saved_style = GetWindowLong(w->priv->hwnd, GWL_STYLE);
+    w->priv->saved_ex_style = GetWindowLong(w->priv->hwnd, GWL_EXSTYLE);
+    GetWindowRect(w->priv->hwnd, &w->priv->saved_rect);
   }
-  w->priv.is_fullscreen = !!fullscreen;
+  w->priv->is_fullscreen = !!fullscreen;
   if (fullscreen) {
     MONITORINFO monitor_info;
-    SetWindowLong(w->priv.hwnd, GWL_STYLE,
-                  w->priv.saved_style & ~(WS_CAPTION | WS_THICKFRAME));
-    SetWindowLong(w->priv.hwnd, GWL_EXSTYLE,
-                  w->priv.saved_ex_style &
+    SetWindowLong(w->priv->hwnd, GWL_STYLE,
+                  w->priv->saved_style & ~(WS_CAPTION | WS_THICKFRAME));
+    SetWindowLong(w->priv->hwnd, GWL_EXSTYLE,
+                  w->priv->saved_ex_style &
                       ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE |
                         WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
     monitor_info.cbSize = sizeof(monitor_info);
-    GetMonitorInfo(MonitorFromWindow(w->priv.hwnd, MONITOR_DEFAULTTONEAREST),
+    GetMonitorInfo(MonitorFromWindow(w->priv->hwnd, MONITOR_DEFAULTTONEAREST),
                    &monitor_info);
     RECT r;
     r.left = monitor_info.rcMonitor.left;
     r.top = monitor_info.rcMonitor.top;
     r.right = monitor_info.rcMonitor.right;
     r.bottom = monitor_info.rcMonitor.bottom;
-    SetWindowPos(w->priv.hwnd, NULL, r.left, r.top, r.right - r.left,
+    SetWindowPos(w->priv->hwnd, NULL, r.left, r.top, r.right - r.left,
                  r.bottom - r.top,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   } else {
-    SetWindowLong(w->priv.hwnd, GWL_STYLE, w->priv.saved_style);
-    SetWindowLong(w->priv.hwnd, GWL_EXSTYLE, w->priv.saved_ex_style);
-    SetWindowPos(w->priv.hwnd, NULL, w->priv.saved_rect.left,
-                 w->priv.saved_rect.top,
-                 w->priv.saved_rect.right - w->priv.saved_rect.left,
-                 w->priv.saved_rect.bottom - w->priv.saved_rect.top,
+    SetWindowLong(w->priv->hwnd, GWL_STYLE, w->priv->saved_style);
+    SetWindowLong(w->priv->hwnd, GWL_EXSTYLE, w->priv->saved_ex_style);
+    SetWindowPos(w->priv->hwnd, NULL, w->priv->saved_rect.left,
+                 w->priv->saved_rect.top,
+                 w->priv->saved_rect.right - w->priv->saved_rect.left,
+                 w->priv->saved_rect.bottom - w->priv->saved_rect.top,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
   }
 }
@@ -1084,7 +1114,7 @@ WEBVIEW_API void webview_set_fullscreen(struct webview *w, int fullscreen) {
 WEBVIEW_API void webview_set_color(struct webview *w, uint8_t r, uint8_t g,
                                    uint8_t b, uint8_t a) {
   HBRUSH brush = CreateSolidBrush(RGB(r, g, b));
-  SetClassLongPtr(w->priv.hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
+  SetClassLongPtr(w->priv->hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)brush);
 }
 
 /* These are missing parts from MinGW */
@@ -1214,7 +1244,7 @@ WEBVIEW_API void webview_dialog(struct webview *w,
     if (dlg->lpVtbl->SetOptions(dlg, opts) != S_OK) {
       goto error_dlg;
     }
-    if (dlg->lpVtbl->Show(dlg, w->priv.hwnd) != S_OK) {
+    if (dlg->lpVtbl->Show(dlg, w->priv->hwnd) != S_OK) {
       goto error_dlg;
     }
     if (dlg->lpVtbl->GetResult(dlg, &res) != S_OK) {
@@ -1237,7 +1267,7 @@ WEBVIEW_API void webview_dialog(struct webview *w,
     /* MinGW often doesn't contain TaskDialog, we'll use MessageBox for now */
     WCHAR *wtitle = webview_to_utf16(title);
     WCHAR *warg = webview_to_utf16(arg);
-    TaskDialog(w->priv.hwnd, NULL, NULL, wtitle, warg, 0, NULL, NULL);
+    TaskDialog(w->priv->hwnd, NULL, NULL, wtitle, warg, 0, NULL, NULL);
     GlobalFree(warg);
     GlobalFree(wtitle);
 #else
@@ -1253,7 +1283,7 @@ WEBVIEW_API void webview_dialog(struct webview *w,
       type |= MB_ICONERROR;
       break;
     }
-    MessageBox(w->priv.hwnd, arg, title, type);
+    MessageBox(w->priv->hwnd, arg, title, type);
 #endif
   }
 }
@@ -1261,8 +1291,9 @@ WEBVIEW_API void webview_dialog(struct webview *w,
 WEBVIEW_API void webview_terminate(struct webview *w) { PostQuitMessage(0); }
 
 WEBVIEW_API void webview_exit(struct webview *w) {
-  DestroyWindow(w->priv.hwnd);
+  DestroyWindow(w->priv->hwnd);
   OleUninitialize();
+  free(w->priv);
 }
 
 WEBVIEW_API void webview_print_log(const char *s) { OutputDebugString(s); }

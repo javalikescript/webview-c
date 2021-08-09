@@ -22,6 +22,22 @@
  * SOFTWARE.
  */
 
+#include <JavaScriptCore/JavaScript.h>
+#include <gtk/gtk.h>
+#include <webkit2/webkit2.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct webview_priv {
+  GtkWidget *window;
+  GtkWidget *scroller;
+  GtkWidget *webview;
+  GAsyncQueue *queue;
+  int ready;
+  int js_busy;
+  int should_exit;
+};
+
 static void external_message_received_cb(WebKitUserContentManager *m,
                                          WebKitJavascriptResult *r,
                                          gpointer arg) {
@@ -56,13 +72,13 @@ static void webview_load_changed_cb(WebKitWebView *webview,
   (void)webview;
   struct webview *w = (struct webview *)arg;
   if (event == WEBKIT_LOAD_FINISHED) {
-    if (!w->priv.ready) {
+    if (!w->priv->ready) {
       webkit_web_view_run_javascript(
-        WEBKIT_WEB_VIEW(w->priv.webview),
+        WEBKIT_WEB_VIEW(w->priv->webview),
         "if(!window.external){" REGISTER_EXTERNAL_INVOKE_JS "}",
         NULL, NULL, NULL);
     }
-    w->priv.ready = 1;
+    w->priv->ready = 1;
   }
 }
 
@@ -90,77 +106,82 @@ WEBVIEW_API int webview_init(struct webview *w) {
     return -1;
   }
 
-  w->priv.ready = 0;
-  w->priv.should_exit = 0;
-  w->priv.queue = g_async_queue_new();
-  w->priv.window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(w->priv.window), w->title);
+  w->priv = (struct webview_priv *)malloc(sizeof(struct webview_priv));
+  if (!w->priv) {
+    return -1;
+  }
+  memset(w->priv, 0, sizeof(struct webview_priv));
+  w->priv->ready = 0;
+  w->priv->should_exit = 0;
+  w->priv->queue = g_async_queue_new();
+  w->priv->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title(GTK_WINDOW(w->priv->window), w->title);
 
   if (w->resizable) {
-    gtk_window_set_default_size(GTK_WINDOW(w->priv.window), w->width,
+    gtk_window_set_default_size(GTK_WINDOW(w->priv->window), w->width,
                                 w->height);
   } else {
-    gtk_widget_set_size_request(w->priv.window, w->width, w->height);
+    gtk_widget_set_size_request(w->priv->window, w->width, w->height);
   }
-  gtk_window_set_resizable(GTK_WINDOW(w->priv.window), !!w->resizable);
-  gtk_window_set_position(GTK_WINDOW(w->priv.window), GTK_WIN_POS_CENTER);
+  gtk_window_set_resizable(GTK_WINDOW(w->priv->window), !!w->resizable);
+  gtk_window_set_position(GTK_WINDOW(w->priv->window), GTK_WIN_POS_CENTER);
 
-  w->priv.scroller = gtk_scrolled_window_new(NULL, NULL);
-  gtk_container_add(GTK_CONTAINER(w->priv.window), w->priv.scroller);
+  w->priv->scroller = gtk_scrolled_window_new(NULL, NULL);
+  gtk_container_add(GTK_CONTAINER(w->priv->window), w->priv->scroller);
 
   WebKitUserContentManager *m = webkit_user_content_manager_new();
   webkit_user_content_manager_register_script_message_handler(m, "external");
   g_signal_connect(m, "script-message-received::external",
                    G_CALLBACK(external_message_received_cb), w);
 
-  w->priv.webview = webkit_web_view_new_with_user_content_manager(m);
-  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(w->priv.webview),
+  w->priv->webview = webkit_web_view_new_with_user_content_manager(m);
+  webkit_web_view_load_uri(WEBKIT_WEB_VIEW(w->priv->webview),
                            webview_check_url(w->url));
-  g_signal_connect(G_OBJECT(w->priv.webview), "load-changed",
+  g_signal_connect(G_OBJECT(w->priv->webview), "load-changed",
                    G_CALLBACK(webview_load_changed_cb), w);
-  gtk_container_add(GTK_CONTAINER(w->priv.scroller), w->priv.webview);
+  gtk_container_add(GTK_CONTAINER(w->priv->scroller), w->priv->webview);
 
   if (w->debug) {
     WebKitSettings *settings =
-        webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv.webview));
+        webkit_web_view_get_settings(WEBKIT_WEB_VIEW(w->priv->webview));
     webkit_settings_set_enable_write_console_messages_to_stdout(settings, true);
     webkit_settings_set_enable_developer_extras(settings, true);
   } else {
-    g_signal_connect(G_OBJECT(w->priv.webview), "context-menu",
+    g_signal_connect(G_OBJECT(w->priv->webview), "context-menu",
                      G_CALLBACK(webview_context_menu_cb), w);
   }
 
-  gtk_widget_show_all(w->priv.window);
+  gtk_widget_show_all(w->priv->window);
 
-  webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(w->priv.webview),
+  webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(w->priv->webview),
     REGISTER_EXTERNAL_INVOKE_JS, NULL, NULL, NULL);
 
-  g_signal_connect(G_OBJECT(w->priv.window), "destroy",
+  g_signal_connect(G_OBJECT(w->priv->window), "destroy",
                    G_CALLBACK(webview_destroy_cb), w);
   return 0;
 }
 
 WEBVIEW_API int webview_loop(struct webview *w, int blocking) {
   gtk_main_iteration_do(blocking);
-  return w->priv.should_exit;
+  return w->priv->should_exit;
 }
 
 WEBVIEW_API void webview_set_title(struct webview *w, const char *title) {
-  gtk_window_set_title(GTK_WINDOW(w->priv.window), title);
+  gtk_window_set_title(GTK_WINDOW(w->priv->window), title);
 }
 
 WEBVIEW_API void webview_set_fullscreen(struct webview *w, int fullscreen) {
   if (fullscreen) {
-    gtk_window_fullscreen(GTK_WINDOW(w->priv.window));
+    gtk_window_fullscreen(GTK_WINDOW(w->priv->window));
   } else {
-    gtk_window_unfullscreen(GTK_WINDOW(w->priv.window));
+    gtk_window_unfullscreen(GTK_WINDOW(w->priv->window));
   }
 }
 
 WEBVIEW_API void webview_set_color(struct webview *w, uint8_t r, uint8_t g,
                                    uint8_t b, uint8_t a) {
   GdkRGBA color = {r / 255.0, g / 255.0, b / 255.0, a / 255.0};
-  webkit_web_view_set_background_color(WEBKIT_WEB_VIEW(w->priv.webview),
+  webkit_web_view_set_background_color(WEBKIT_WEB_VIEW(w->priv->webview),
                                        &color);
 }
 
@@ -175,7 +196,7 @@ WEBVIEW_API void webview_dialog(struct webview *w,
   if (dlgtype == WEBVIEW_DIALOG_TYPE_OPEN ||
       dlgtype == WEBVIEW_DIALOG_TYPE_SAVE) {
     dlg = gtk_file_chooser_dialog_new(
-        title, GTK_WINDOW(w->priv.window),
+        title, GTK_WINDOW(w->priv->window),
         (dlgtype == WEBVIEW_DIALOG_TYPE_OPEN
              ? (flags & WEBVIEW_DIALOG_FLAG_DIRECTORY
                     ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER
@@ -209,7 +230,7 @@ WEBVIEW_API void webview_dialog(struct webview *w,
       type = GTK_MESSAGE_ERROR;
       break;
     }
-    dlg = gtk_message_dialog_new(GTK_WINDOW(w->priv.window), GTK_DIALOG_MODAL,
+    dlg = gtk_message_dialog_new(GTK_WINDOW(w->priv->window), GTK_DIALOG_MODAL,
                                  type, GTK_BUTTONS_OK, "%s", title);
     gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dlg), "%s",
                                              arg);
@@ -223,17 +244,17 @@ static void webview_eval_finished(GObject *object, GAsyncResult *result,
   (void)object;
   (void)result;
   struct webview *w = (struct webview *)userdata;
-  w->priv.js_busy = 0;
+  w->priv->js_busy = 0;
 }
 
 WEBVIEW_API int webview_eval(struct webview *w, const char *js) {
-  while (w->priv.ready == 0) {
+  while (w->priv->ready == 0) {
     g_main_context_iteration(NULL, TRUE);
   }
-  w->priv.js_busy = 1;
-  webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(w->priv.webview), js, NULL,
+  w->priv->js_busy = 1;
+  webkit_web_view_run_javascript(WEBKIT_WEB_VIEW(w->priv->webview), js, NULL,
                                  webview_eval_finished, w);
-  while (w->priv.js_busy) {
+  while (w->priv->js_busy) {
     g_main_context_iteration(NULL, TRUE);
   }
   return 0;
@@ -243,7 +264,7 @@ static gboolean webview_dispatch_wrapper(gpointer userdata) {
   struct webview *w = (struct webview *)userdata;
   for (;;) {
     struct webview_dispatch_arg *arg =
-        (struct webview_dispatch_arg *)g_async_queue_try_pop(w->priv.queue);
+        (struct webview_dispatch_arg *)g_async_queue_try_pop(w->priv->queue);
     if (arg == NULL) {
       break;
     }
@@ -260,19 +281,22 @@ WEBVIEW_API void webview_dispatch(struct webview *w, webview_dispatch_fn fn,
   context->w = w;
   context->arg = arg;
   context->fn = fn;
-  g_async_queue_lock(w->priv.queue);
-  g_async_queue_push_unlocked(w->priv.queue, context);
-  if (g_async_queue_length_unlocked(w->priv.queue) == 1) {
+  g_async_queue_lock(w->priv->queue);
+  g_async_queue_push_unlocked(w->priv->queue, context);
+  if (g_async_queue_length_unlocked(w->priv->queue) == 1) {
     gdk_threads_add_idle(webview_dispatch_wrapper, w);
   }
-  g_async_queue_unlock(w->priv.queue);
+  g_async_queue_unlock(w->priv->queue);
 }
 
 WEBVIEW_API void webview_terminate(struct webview *w) {
-  w->priv.should_exit = 1;
+  w->priv->should_exit = 1;
 }
 
-WEBVIEW_API void webview_exit(struct webview *w) { (void)w; }
+WEBVIEW_API void webview_exit(struct webview *w) {
+  free(w->priv);
+}
+
 WEBVIEW_API void webview_print_log(const char *s) {
   fprintf(stderr, "%s\n", s);
 }

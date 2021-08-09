@@ -55,13 +55,13 @@ static void webview_load_changed_cb(WebKitWebView *webview,
                                     WebKitLoadEvent event, gpointer arg) {
   (void)webview;
   struct webview *w = (struct webview *)arg;
-  if (event == WEBKIT_LOAD_FINISHED) {
-    if (!w->priv.ready) {
-      webkit_web_view_run_javascript(
-        WEBKIT_WEB_VIEW(w->priv.webview),
-        "if(!window.external){" REGISTER_EXTERNAL_INVOKE_JS "}",
-        NULL, NULL, NULL);
-    }
+  if (event == WEBKIT_LOAD_STARTED) {
+    w->priv.ready = 0;
+  } else if (event == WEBKIT_LOAD_FINISHED) {
+    webkit_web_view_run_javascript(
+      WEBKIT_WEB_VIEW(w->priv.webview),
+      "if(!window.external){" REGISTER_EXTERNAL_INVOKE_JS "}",
+      NULL, NULL, NULL);
     w->priv.ready = 1;
   }
 }

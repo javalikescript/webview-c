@@ -21,7 +21,7 @@ Look at the example `webview-example.c`.
 
 int main() {
   /* Open Lua in a 800x600 resizable window */
-  webview("Minimal webview example", "https://www.lua.org", 800, 600, 1);
+  webview_run("Minimal webview example", "https://www.lua.org", 800, 600, 1);
   return 0;
 }
 ```

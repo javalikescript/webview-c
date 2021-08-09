@@ -131,28 +131,6 @@ struct webview_dispatch_arg {
   void *arg;
 };
 
-#define DEFAULT_URL                                                            \
-  "data:text/"                                                                 \
-  "html,%3C%21DOCTYPE%20html%3E%0A%3Chtml%20lang=%22en%22%3E%0A%3Chead%3E%"    \
-  "3Cmeta%20charset=%22utf-8%22%3E%3Cmeta%20http-equiv=%22X-UA-Compatible%22%" \
-  "20content=%22IE=edge%22%3E%3C%2Fhead%3E%0A%3Cbody%3E%3Cdiv%20id=%22app%22%" \
-  "3E%3C%2Fdiv%3E%3Cscript%20type=%22text%2Fjavascript%22%3E%3C%2Fscript%3E%"  \
-  "3C%2Fbody%3E%0A%3C%2Fhtml%3E"
-
-#define CSS_INJECT_FUNCTION                                                    \
-  "(function(e){var "                                                          \
-  "t=document.createElement('style'),d=document.head||document."               \
-  "getElementsByTagName('head')[0];t.setAttribute('type','text/"               \
-  "css'),t.styleSheet?t.styleSheet.cssText=e:t.appendChild(document."          \
-  "createTextNode(e)),d.appendChild(t)})"
-
-static const char *webview_check_url(const char *url) {
-  if (url == NULL || strlen(url) == 0) {
-    return DEFAULT_URL;
-  }
-  return url;
-}
-
 WEBVIEW_API int webview(const char *title, const char *url, int width,
                         int height, int resizable);
 
@@ -177,6 +155,28 @@ WEBVIEW_API void webview_print_log(const char *s);
 
 #ifdef WEBVIEW_IMPLEMENTATION
 #undef WEBVIEW_IMPLEMENTATION
+
+#define DEFAULT_URL                                                            \
+  "data:text/"                                                                 \
+  "html,%3C%21DOCTYPE%20html%3E%0A%3Chtml%20lang=%22en%22%3E%0A%3Chead%3E%"    \
+  "3Cmeta%20charset=%22utf-8%22%3E%3Cmeta%20http-equiv=%22X-UA-Compatible%22%" \
+  "20content=%22IE=edge%22%3E%3C%2Fhead%3E%0A%3Cbody%3E%3Cdiv%20id=%22app%22%" \
+  "3E%3C%2Fdiv%3E%3Cscript%20type=%22text%2Fjavascript%22%3E%3C%2Fscript%3E%"  \
+  "3C%2Fbody%3E%0A%3C%2Fhtml%3E"
+
+#define CSS_INJECT_FUNCTION                                                    \
+  "(function(e){var "                                                          \
+  "t=document.createElement('style'),d=document.head||document."               \
+  "getElementsByTagName('head')[0];t.setAttribute('type','text/"               \
+  "css'),t.styleSheet?t.styleSheet.cssText=e:t.appendChild(document."          \
+  "createTextNode(e)),d.appendChild(t)})"
+
+static const char *webview_check_url(const char *url) {
+  if (url == NULL || strlen(url) == 0) {
+    return DEFAULT_URL;
+  }
+  return url;
+}
 
 WEBVIEW_API int webview(const char *title, const char *url, int width,
                         int height, int resizable) {

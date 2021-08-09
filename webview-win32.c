@@ -734,7 +734,7 @@ static int DisplayHTMLPage(struct webview *w) {
   return (-5);
 }
 
-#include "webview2.h"
+#include "WebView2.h"
 
 #if defined(__WebView2_LIBRARY_DEFINED__)
 #include "webview-win32-edge.c"

@@ -92,7 +92,7 @@ struct webview_priv {
 #error "Define one of: WEBVIEW_GTK, WEBVIEW_COCOA or WEBVIEW_WINAPI"
 #endif
 
-struct webview;
+typedef struct webview webview;
 
 typedef void (*webview_external_invoke_cb_t)(struct webview *w,
                                              const char *arg);
@@ -127,13 +127,15 @@ enum webview_dialog_flag {
 
 typedef void (*webview_dispatch_fn)(struct webview *w, void *arg);
 
+typedef struct webview_dispatch_arg webview_dispatch_arg;
+
 struct webview_dispatch_arg {
   webview_dispatch_fn fn;
   struct webview *w;
   void *arg;
 };
 
-WEBVIEW_API int webview(const char *title, const char *url, int width,
+WEBVIEW_API int webview_run(const char *title, const char *url, int width,
                         int height, int resizable);
 
 WEBVIEW_API int webview_init(struct webview *w);
@@ -180,7 +182,7 @@ static const char *webview_check_url(const char *url) {
   return url;
 }
 
-WEBVIEW_API int webview(const char *title, const char *url, int width,
+WEBVIEW_API int webview_run(const char *title, const char *url, int width,
                         int height, int resizable) {
   struct webview webview;
   memset(&webview, 0, sizeof(webview));

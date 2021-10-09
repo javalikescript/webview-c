@@ -85,7 +85,17 @@ static gboolean webview_context_menu_cb(WebKitWebView *webview,
   return TRUE;
 }
 
+static void noLogHandler(const gchar *domain, GLogLevelFlags level, const gchar *message, gpointer data) {
+  return;
+}
+
 WEBVIEW_API int webview_init(struct webview *w) {
+
+  if (!w->debug) {
+    g_log_set_handler("GLib", G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION, noLogHandler, NULL);
+  }
+  //gtk_disable_setlocale();
+
   if (gtk_init_check(0, NULL) == FALSE) {
     return -1;
   }

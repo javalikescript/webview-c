@@ -10,6 +10,12 @@ This library is a fork of the [webview](https://github.com/zserge/webview/tree/9
 
 A [Lua binding](https://github.com/javalikescript/lua-webview) is available.
 
+## Limitations
+
+Opening multiple webviews is not supported.
+
+Mac OS is not supported as I do not have access to.
+
 ## Example
 
 Look at the example `webview-example.c`.

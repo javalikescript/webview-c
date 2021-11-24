@@ -124,6 +124,11 @@ WEBVIEW_API int webview_init(struct webview *w) {
                    G_CALLBACK(external_message_received_cb), w);
 
   w->priv.webview = webkit_web_view_new_with_user_content_manager(m);
+
+  if (getenv("WEBVIEW_GTK_NO_SPURIOUS_REF") == NULL) {
+    g_object_ref(w->priv.webview); // work around core dump
+  }
+
   webkit_web_view_load_uri(WEBKIT_WEB_VIEW(w->priv.webview),
                            webview_check_url(w->url));
   g_signal_connect(G_OBJECT(w->priv.webview), "load-changed",

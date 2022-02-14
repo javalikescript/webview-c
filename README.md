@@ -39,7 +39,7 @@ Build it using the following command line.
 gcc webview-example.c -DWEBVIEW_GTK=1 `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0` -o webview-example
 
 # MacOS
-gcc webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
+gcc -ObjC -DOBJC_OLD_DISPATCH_PROTOTYPES=1 webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 
 # Windows (mingw)
 gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe

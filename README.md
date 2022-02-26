@@ -7,6 +7,7 @@ It supports two-way JavaScript bindings (to call JavaScript from C and to call C
 It uses Cocoa/WebKit on macOS, gtk-webkit2 on Linux and MSHTML (IE10/11) or Edge (Chromium) on Windows.
 
 This library is a fork of the [webview](https://github.com/zserge/webview/tree/9c1b0a888aa40039d501c1ea9f60b22a076a25ea) library.
+The goal of this fork is mainly to retain the support of MinGW, the C language and the IE fallback on Windows.
 
 A [Lua binding](https://github.com/javalikescript/lua-webview) is available.
 
@@ -14,7 +15,7 @@ A [Lua binding](https://github.com/javalikescript/lua-webview) is available.
 
 Opening multiple webviews is not supported.
 
-Mac OS is not supported as I do not have access to.
+Mac OS is not supported as I do not have access to a development environment on this OS.
 
 ## Example
 
@@ -41,7 +42,7 @@ gcc webview-example.c -DWEBVIEW_GTK=1 `pkg-config --cflags --libs gtk+-3.0 webki
 # MacOS
 gcc -ObjC -DOBJC_OLD_DISPATCH_PROTOTYPES=1 webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 
-# Windows (mingw)
+# Windows (MinGW)
 gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
 ```
 
@@ -53,7 +54,7 @@ The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder co
 
 The [WebView2 Runtime](https://docs.microsoft.com/en-gb/microsoft-edge/webview2/concepts/distribution#understanding-the-webview2-runtime) shall be installed with the same architecture, x64 or x86.
 
-There is a minimum Microsoft Edge version required, here 86.0.616 (full compatibility: 90.0.818) for 1.0.818.
+There is a minimum Microsoft Edge version required, here 86.0.616 (full compatibility: 96.0.1054) for 1.0.1054.
 
 The WebView2 SDK may fail to auto detect the WebView2 Runtime installation path to use,
 you could indicate the correct installation path by using the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`.

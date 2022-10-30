@@ -2,7 +2,7 @@
 
 A tiny cross-platform webview C library to build modern cross-platform GUIs.
 
-It supports two-way JavaScript bindings (to call JavaScript from C and to call C from JavaScript).
+It supports two-way JavaScript bindings, to call JavaScript from C and to call C from JavaScript.
 
 It uses Cocoa/WebKit on macOS, gtk-webkit2 on Linux and MSHTML (IE10/11) or Edge (Chromium) on Windows.
 
@@ -23,7 +23,7 @@ Look at the example `webview-example.c`.
 
 ```c
 #define WEBVIEW_IMPLEMENTATION
-//don't forget to define WEBVIEW_WINAPI,WEBVIEW_GTK or WEBVIEW_COCAO
+/* don't forget to define WEBVIEW_WINAPI,WEBVIEW_GTK or WEBVIEW_COCAO */
 #include "webview.h"
 
 int main() {
@@ -54,7 +54,7 @@ The environment variable `WEBVIEW2_WIN32_PATH` can be used to pass the folder co
 
 The [WebView2 Runtime](https://docs.microsoft.com/en-gb/microsoft-edge/webview2/concepts/distribution#understanding-the-webview2-runtime) shall be installed with the same architecture, x64 or x86.
 
-There is a minimum Microsoft Edge version required, here 86.0.616 (full compatibility: 96.0.1054) for 1.0.1054.
+There is a minimum Microsoft Edge version required, here 86.0.616 (full compatibility: 96.0.1245) for 1.0.1245.
 
 The WebView2 SDK may fail to auto detect the WebView2 Runtime installation path to use,
 you could indicate the correct installation path by using the environment variable `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`.

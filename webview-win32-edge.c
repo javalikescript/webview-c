@@ -163,7 +163,6 @@ static HRESULT AddScriptToExecuteOnDocumentCreated_Invoke(ICoreWebView2AddScript
 }
 
 static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler * This, HRESULT result, ICoreWebView2Controller *webViewController) {
-  webview_print_log("CreateWebView2Controller_Invoke()");
   ICoreWebView2 *webview;
   if (FAILED(result) || (webViewController == NULL)) {
     char buffer[256];
@@ -171,6 +170,7 @@ static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2Co
     webview_print_log(buffer);
     return E_FAIL;
   }
+  webview_print_log("CreateWebView2Controller_Invoke()");
   webViewController->lpVtbl->AddRef(webViewController);
 
   webview2 *pwv2 = WEBVIEW2_PTR_FROM(This, controller_created_handler);
@@ -198,11 +198,18 @@ static HRESULT CreateWebView2Controller_Invoke(ICoreWebView2CreateCoreWebView2Co
   if ((pwv2->url != NULL) && (strlen(pwv2->url) > 0)) {
     wchar_t *wurl = webview_to_utf16(pwv2->url);
     if (wurl != NULL) {
-      webview_print_log("CreateWebView2Controller_Invoke() Navigate");
-      webview->lpVtbl->Navigate(webview, wurl);
+      webview_print_log("WebView2 Navigate()");
+      HRESULT hr = webview->lpVtbl->Navigate(webview, wurl);
       GlobalFree(wurl);
+      if (FAILED(hr)) { // E_INVALIDARG
+        char buffer[256];
+        sprintf(buffer, "Navigation failed with %08X on URL:", hr);
+        webview_print_log(buffer);
+        webview_print_log(pwv2->url);
+      }
     }
   }
+
   return S_OK;
 }
 
@@ -334,7 +341,10 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
 
 static int WebView2Enable() {
   TCHAR modulePath[MAX_PATH + 22];
-  webview_print_log("Loading WebView2Loader (96.0.1054.31)");
+  webview_print_log("Loading WebView2Loader");
+#if defined(CORE_WEBVIEW_TARGET_PRODUCT_VERSION)
+  OutputDebugStringW(CORE_WEBVIEW_TARGET_PRODUCT_VERSION);
+#endif
   findWebView2BrowserExecutableFolder();
   getWebView2LoaderFileName(modulePath);
   webview_print_log(modulePath);

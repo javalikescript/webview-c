@@ -43,7 +43,7 @@ gcc webview-example.c -DWEBVIEW_GTK=1 `pkg-config --cflags --libs gtk+-3.0 webki
 gcc -ObjC -DOBJC_OLD_DISPATCH_PROTOTYPES=1 webview-example.c -DWEBVIEW_COCOA=1 -framework WebKit -o webview-example
 
 # Windows (MinGW)
-gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe
+gcc webview-example.c -DWEBVIEW_WINAPI=1 -Ims.webview2/include -lole32 -lcomctl32 -loleaut32 -luuid -lgdi32 -o webview-example.exe -w
 ```
 
 ## Edge

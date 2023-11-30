@@ -859,7 +859,8 @@ WEBVIEW_API int webview_init(struct webview *w) {
   if (hInstance == NULL) {
     return -1;
   }
-  if (OleInitialize(NULL) != S_OK) {
+  HRESULT oir = OleInitialize(NULL);
+  if (oir != S_OK && oir != S_FALSE) {
     return -1;
   }
   iconFilename = getenv("WEBVIEW_WIN32_ICON");

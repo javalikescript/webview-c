@@ -15,8 +15,6 @@ A [Lua binding](https://github.com/javalikescript/lua-webview) is available.
 
 Opening multiple webviews is not supported.
 
-Mac OS is not supported as I do not have access to a development environment on this OS.
-
 ## Example
 
 Look at the example `webview-example.c`.

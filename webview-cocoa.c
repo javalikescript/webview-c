@@ -97,16 +97,13 @@ static void run_open_panel(id self, SEL cmd, id webView, id parameters,
       openPanel, sel_registerName("beginWithCompletionHandler:"), ^(id result) {
         if (result == (id)NSModalResponseOK) {
 
-                  id urls = ((id(*)(id, SEL))objc_msgSend)(openPanel, sel_registerName("URLs"));
-        completionHandler(urls);
-
+          id urls = ((id(*)(id, SEL))objc_msgSend)(openPanel, sel_registerName("URLs"));
+          completionHandler(urls);
          
         } else {
           completionHandler(nil);
         }
       });
-
-
 
 }
 
@@ -190,12 +187,12 @@ static void make_nav_policy_decision(id self, SEL cmd, id webView, id response,
 }
 
 
-static const char *parse_HTML_content(const char *html, int *comma_index) {
-    if (html == NULL || *html == '\0' || comma_index == NULL) {
+static const char *parse_data_URI_content_type(const char *uri, int *comma_index) {
+    if (uri == NULL || *uri == '\0' || comma_index == NULL) {
         return NULL; // Handling invalid input
     }
 
-    const char *p = html;
+    const char *p = uri;
     char result[256]; // Assumed maximum length of the result
 
     // Ignore whitespace at the beginning of the string
@@ -215,13 +212,11 @@ static const char *parse_HTML_content(const char *html, int *comma_index) {
     // If 'data:' is found at the start of the result, remove it
     if (strncmp(result, "data:", 5) == 0) {
         memmove(result, result + 5, strlen(result) - 4); // Remove 'data:' by shifting the rest of the string forward
-    }
-    else
-    {
+    } else {
       return NULL;
     }
 
-    *comma_index = (int)(p - html); // Save the index of the first comma
+    *comma_index = (int)(p - uri); // Save the index of the first comma
 
     return strdup(result); // Return a copy of the result (remember to free the allocated memory later)
 }
@@ -400,14 +395,13 @@ WEBVIEW_API int webview_init(struct webview *w) {
 
   ((void(*)(id, SEL, id))objc_msgSend)(w->priv.webview, sel_registerName("setUIDelegate:"), uiDel);
   ((void(*)(id, SEL, id))objc_msgSend)(w->priv.webview, sel_registerName("setNavigationDelegate:"), navDel);
-     
 
 
-   int comma_index;
-  const char *MIMEType = parse_HTML_content(w->url, &comma_index);
+  int comma_index;
 
-  if (MIMEType != NULL)
-  {
+  const char *MIMEType = parse_data_URI_content_type(w->url, &comma_index);
+
+  if (MIMEType != NULL) {
     id NSString = get_nsstring(w->url + (comma_index+1));
     id NSData = ((id(*)(id, SEL, int))objc_msgSend)(NSString, sel_registerName("dataUsingEncoding:"), NSUTF8StringEncoding);
 
@@ -416,9 +410,7 @@ WEBVIEW_API int webview_init(struct webview *w) {
                NSData, get_nsstring(MIMEType),get_nsstring("UTF-8"),NULL);
 
     free((void *)MIMEType);
-  }
-  else
-  {
+  } else {
     id nsURL = ((id(*)(id, SEL, id))objc_msgSend)((id)objc_getClass("NSURL"),
                           sel_registerName("URLWithString:"),
                           get_nsstring(webview_check_url(w->url)));

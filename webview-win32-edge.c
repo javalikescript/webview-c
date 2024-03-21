@@ -339,9 +339,30 @@ WEBVIEW2_WIN32_API int WebView2Eval(webview2 *pwv2, const char *js) {
   return 1;
 }
 
+static int WebView2EnableVersion(GetWebView2BrowserVersionInfoFnType getVersionInfoFn, CreateCoreWebView2EnvironmentWithOptionsFnType createEnvWithOptionsFn) {
+  if ((createEnvWithOptionsFn != NULL) && (getVersionInfoFn != NULL)) {
+    LPWSTR versionInfo = NULL;
+    HRESULT hr = getVersionInfoFn(NULL, &versionInfo);
+    if ((hr == S_OK) && (versionInfo != NULL)) {
+      CreateCoreWebView2EnvironmentFn = createEnvWithOptionsFn;
+      webview_print_log("WebView2 enabled");
+      OutputDebugStringW(versionInfo);
+      return 1;
+    } else {
+      webview_print_log("Unable to get version");
+    }
+  } else {
+    webview_print_log("Uncompatible");
+  }
+  return 0;
+}
+
 static int WebView2Enable() {
   TCHAR modulePath[MAX_PATH + 22];
   webview_print_log("Loading WebView2Loader");
+  if (CreateCoreWebView2EnvironmentFn != NULL) {
+    return 1;
+  }
 #if defined(CORE_WEBVIEW_TARGET_PRODUCT_VERSION)
   OutputDebugStringW(CORE_WEBVIEW_TARGET_PRODUCT_VERSION);
 #endif
@@ -349,26 +370,29 @@ static int WebView2Enable() {
   getWebView2LoaderFileName(modulePath);
   webview_print_log(modulePath);
   HMODULE hWebView2LoaderModule = LoadLibraryA(modulePath);
-  if (hWebView2LoaderModule != NULL) {
-    GetWebView2BrowserVersionInfoFnType GetWebView2BrowserVersionInfoFn = (GetWebView2BrowserVersionInfoFnType)GetProcAddress(hWebView2LoaderModule, GET_AVAILABLE_COREWEBVIEW2_BROWSER_VERSION_FN_NAME);
-    CreateCoreWebView2EnvironmentFn = (CreateCoreWebView2EnvironmentWithOptionsFnType)GetProcAddress(hWebView2LoaderModule, CREATE_COREWEBVIEW2_ENVIRONMENTWITHOPTIONS_FN_NAME);
-    if ((CreateCoreWebView2EnvironmentFn != NULL) && (GetWebView2BrowserVersionInfoFn != NULL)) {
-      LPWSTR versionInfo = NULL;
-      HRESULT hr = GetWebView2BrowserVersionInfoFn(NULL, &versionInfo);
-      if ((hr == S_OK) && (versionInfo != NULL)) {
-        webview_print_log("WebView2 enabled");
-        OutputDebugStringW(versionInfo);
-        return 1;
-      } else {
-        webview_print_log("Unable to get version");
-      }
-    } else {
-      webview_print_log("Uncompatible");
-    }
-  } else {
+  if (hWebView2LoaderModule == NULL) {
     webview_print_log("Unable to load, you could set " WEBVIEW2_WIN32_PATH);
+    return 0;
   }
-  CreateCoreWebView2EnvironmentFn = NULL;
-  webview_print_log("Not available");
-  return 0;
+  GetWebView2BrowserVersionInfoFnType getVersionInfoFn = (GetWebView2BrowserVersionInfoFnType)GetProcAddress(hWebView2LoaderModule, GET_AVAILABLE_COREWEBVIEW2_BROWSER_VERSION_FN_NAME);
+  CreateCoreWebView2EnvironmentWithOptionsFnType createEnvWithOptionsFn = (CreateCoreWebView2EnvironmentWithOptionsFnType)GetProcAddress(hWebView2LoaderModule, CREATE_COREWEBVIEW2_ENVIRONMENTWITHOPTIONS_FN_NAME);
+  return WebView2EnableVersion(getVersionInfoFn, createEnvWithOptionsFn);
 }
+
+#if defined(WEBVIEW2_MEMORY_MODULE)
+#include "MemoryModule.h"
+WEBVIEW_API int WebView2Load(const void *data, size_t size) {
+  if (CreateCoreWebView2EnvironmentFn != NULL) {
+    return 1;
+  }
+  HMEMORYMODULE hWebView2LoaderModule = MemoryLoadLibrary(data, size);
+  if (hWebView2LoaderModule == NULL) {
+    webview_print_log("Unable to load");
+    return 0;
+  }
+  //  void MemoryFreeLibrary(HMEMORYMODULE);
+  GetWebView2BrowserVersionInfoFnType getVersionInfoFn = (GetWebView2BrowserVersionInfoFnType)MemoryGetProcAddress(hWebView2LoaderModule, GET_AVAILABLE_COREWEBVIEW2_BROWSER_VERSION_FN_NAME);
+  CreateCoreWebView2EnvironmentWithOptionsFnType createEnvWithOptionsFn = (CreateCoreWebView2EnvironmentWithOptionsFnType)MemoryGetProcAddress(hWebView2LoaderModule, CREATE_COREWEBVIEW2_ENVIRONMENTWITHOPTIONS_FN_NAME);
+  return WebView2EnableVersion(getVersionInfoFn, createEnvWithOptionsFn);
+}
+#endif

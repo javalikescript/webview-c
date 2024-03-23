@@ -874,6 +874,11 @@ WEBVIEW_API int webview_init(struct webview *w) {
   wc.lpfnWndProc = wndproc;
   wc.lpszClassName = classname;
   wc.hIcon = (HICON) LoadImage(NULL, iconFilename, IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED);
+#if defined(WEBVIEW_WIN32_ICON_RES)
+  if (wc.hIcon == NULL) {
+    wc.hIcon = (HICON) LoadImage(hInstance, MAKEINTRESOURCE(WEBVIEW_WIN32_ICON_RES), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+  }
+#endif
   RegisterClassEx(&wc);
 
   style = WS_OVERLAPPEDWINDOW;

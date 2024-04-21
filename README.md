@@ -15,6 +15,16 @@ A [Lua binding](https://github.com/javalikescript/lua-webview) is available.
 
 Opening multiple webviews is not supported.
 
+## Prerequisites
+
+You need the `gcc` compiler.
+
+On Linux you need the GTK and WebKit2GTK libraries.
+
+```bash
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev
+```
+
 ## Example
 
 Look at the example `webview-example.c`.

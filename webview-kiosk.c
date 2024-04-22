@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
   struct webview webview;
   int r;
   memset(&webview, 0, sizeof(webview));
-  webview.url = argc > 1 ? argv[1] : "https://time.is/";
+  webview.url = argc > 1 ? argv[1] : "https://javalikescript.github.io/time.html";
   webview.width = 320;
   webview.height = 240;
   webview.resizable = 1;
